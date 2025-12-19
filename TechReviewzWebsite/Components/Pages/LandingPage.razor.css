@@ -1,0 +1,143 @@
+.panel1 {
+    position: absolute;
+    height: 600px;
+    top: 60px;
+    background-color: #D9D9D9;
+}
+
+.panel1_txt {
+    top: 400px;
+    left: 450px;
+    z-index: 2;
+}
+
+.panel1_img {
+    position: absolute;
+    height: 500px;
+    width: 1420px;
+    top: 60px;
+    left: 250px;
+    background-color: white;
+}
+
+.panel2 {
+    position: absolute;
+    height: 350px;
+    top: 660px;
+    background-color: white;
+}
+
+.panel2_txt {
+    top: 50px;
+    left: 800px;
+    z-index: 2;
+}
+
+.panel3 {
+    position: absolute;
+    height: 700px;
+    top: 1010px;
+    background-color: #912729;
+}
+
+.panel3_txt {
+    color: white;
+    top: 70px;
+    left: 725px;
+    z-index: 2;
+}
+
+.panel4_1 {
+    position: absolute;
+    height: 500px;
+    width: 50%;
+    top: 1710px;
+    left: 0px;
+    background-color: #D9D9D9;
+    align-content: center;
+    padding: 100px;
+    font-weight: bold;
+}
+
+.panel4_1_txt {
+    color: black;
+    top: 70px;
+    left: 725px;
+    z-index: 2;
+}
+
+.panel4_2 {
+    position: absolute;
+    height: 500px;
+    width: 50%;
+    top: 1710px;
+    left: 50%;
+    background-color: #D9D9D9;
+}
+
+.panel4_img {
+    position: absolute;
+    height: 400px;
+    width: 700px;
+    top: 50px;
+    left: 125px;
+    background-color: white;
+}
+
+.panel5 {
+    position: absolute;
+    height: 400px;
+    width: 100%;
+    top: 2210px;
+    left: 0px;
+    background-color: white;
+    text-align: center;
+    padding: 30px;
+    font-weight: bold;
+}
+
+.panel5_txt {
+    position: center;
+    color: black;
+    z-index: 2;
+}
+
+.panel6 {
+    position: absolute;
+    height: 50px;
+    width: 100%;
+    top: 2610px;
+    left: 0px;
+    background-color: #912729;
+    text-align: center;
+    padding: 15px;
+    font-weight: bold;
+}
+
+.panel6_txt {
+    position: center;
+    color: white;
+    z-index: 2;
+}
+
+.spacing {
+    margin-bottom: 20px;
+}
+
+.spacing2 {
+    padding: 50px;
+}
+
+/* Grouped */
+.panel1, .panel2, .panel3 {
+    position: absolute;
+    width: 100%;
+    left: 0px;
+}
+
+.panel1_txt, .panel2_txt, .panel3_txt {
+    position: absolute;
+    font-weight: bold;
+    font-size: 30px;
+    text-align: center;
+}

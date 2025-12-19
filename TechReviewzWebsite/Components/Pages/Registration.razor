@@ -1,0 +1,39 @@
+﻿@page "/Registration"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+
+<PageTitle>Registration</PageTitle>
+
+<div class="signup_panel">
+    <div class="heading">
+        <h1><b>Sign Up</b></h1>
+    </div>
+
+    <div class="spacing1">
+        <label for="email">Email</label>
+        <input id="email" class="form-control" type="email" placeholder="you@example.com" />
+    </div>
+
+    <div class="spacing1">
+        <label for="password">Create Password</label>
+        <input id="password" class="form-control" type="password" placeholder="••••••••" />
+    </div>
+
+    <div class="signup_button">
+        <button class="btn btn-primary" @onclick="GoToCompleteProfile">Sign up</button>
+    </div>
+
+    <div class="other_button">
+        <button class="btn btn-primary margin" href="CompleteProfile">Sign up with Google</button>
+        <button class="btn btn-primary margin" href="CompleteProfile">Sign up with Apple</button>
+    </div>
+    <hr>
+    <p>Have an account? <a href="Login">Log in</a></p>
+</div>
+
+@code {
+    private void GoToCompleteProfile()
+    {
+        Navigation.NavigateTo("/CompleteProfile");
+    }
+}

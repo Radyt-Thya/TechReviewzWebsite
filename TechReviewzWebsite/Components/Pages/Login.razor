@@ -1,0 +1,31 @@
+﻿@page "/Login"
+@rendermode InteractiveServer
+
+<PageTitle>Login</PageTitle>
+
+<div class="login_panel">
+    <div class="heading">
+        <h1><b>Login</b></h1>
+    </div>
+
+    <div class="spacing">
+        <label for="email">Email</label>
+        <input id="email" class="form-control" type="email" placeholder="you@example.com" />
+    </div>
+
+    <div class="spacing">
+        <label for="password">Password</label>
+        <input id="password" class="form-control" type="password" placeholder="••••••••" />
+    </div>
+
+    <div class="login_button">
+        <button class="btn btn-primary">Login</button>
+    </div>
+
+    <div class="other_button">
+        <button class="btn btn-primary margin">Login with Google</button>
+        <button class="btn btn-primary margin">Login with Apple</button>
+    </div>
+    <hr>
+    <p>Don't have an account? <a href="Registration">Sign up here</a></p>
+</div>
