@@ -14,6 +14,7 @@
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject RoleManager<IdentityRole> RoleManager
 
 <PageTitle>Register</PageTitle>
 
@@ -27,6 +28,21 @@
             <h2>Create a new account.</h2>
             <hr />
             <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.FirstName" class="form-control" autocomplete="firstname" aria-required="true" placeholder="John" />
+                <label for="email">First Name</label>
+                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.LastName" class="form-control" autocomplete="lastname" aria-required="true" placeholder="Doe" />
+                <label for="email">Email</label>
+                <ValidationMessage For="() => Input.LastName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Gender" class="form-control" autocomplete="gender" aria-required="true" placeholder="Male/Female/Others" />
+                <label for="email">Email</label>
+                <ValidationMessage For="() => Input.Gender" class="text-danger" />
+            </div>
             <div class="form-floating mb-3">
                 <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                 <label for="email">Email</label>
@@ -72,6 +88,11 @@
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+        user.FirstName = Input.FirstName; 
+        user.LastName = Input.LastName;
+        user.Gender = Input.Gender;
+
         var result = await UserManager.CreateAsync(user, Input.Password);
 
         if (!result.Succeeded)
@@ -79,6 +100,16 @@
             identityErrors = result.Errors;
             return;
         }
+
+        //create the user role if it doesn't exist 
+        if (!await RoleManager.RoleExistsAsync("User")) 
+        {     
+            await RoleManager.CreateAsync(new IdentityRole("User")); 
+        } 
+        //add the user to the user role 
+        await UserManager.AddToRoleAsync(user, "User"); 
+        //add the user id as claim when user registers 
+        await UserManager.AddClaimAsync(user, new System.Security.Claims.Claim("userId", user.Id));
 
         Logger.LogInformation("User created a new account with password.");
 
@@ -126,6 +157,18 @@
 
     private sealed class InputModel
     {
+        [Required]
+        [Display(Name = "First Name")] 
+        public string FirstName { get; set; } = ""; 
+
+        [Required]
+        [Display(Name = "Last Name")] 
+        public string LastName { get; set; } = "";
+
+        [Required]
+        [Display(Name = "Gender")]
+        public string Gender { get; set; } = "";
+
         [Required]
         [EmailAddress]
         [Display(Name = "Email")]

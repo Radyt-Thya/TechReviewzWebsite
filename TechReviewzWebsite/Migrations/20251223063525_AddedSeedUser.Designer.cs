@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TechReviewzWebsite.Data;
 
@@ -11,9 +12,11 @@ using TechReviewzWebsite.Data;
 namespace TechReviewzWebsite.Migrations
 {
     [DbContext(typeof(TechReviewzWebsiteContext))]
-    partial class TechReviewzWebsiteContextModelSnapshot : ModelSnapshot
+    [Migration("20251223063525_AddedSeedUser")]
+    partial class AddedSeedUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
