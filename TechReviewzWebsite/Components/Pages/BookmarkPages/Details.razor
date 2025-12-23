@@ -1,0 +1,56 @@
+﻿@page "/bookmarks/details"
+@using Microsoft.EntityFrameworkCore
+@using TechReviewzWebsite.Domain
+@inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Bookmark</h2>
+    <hr />
+    @if (bookmark is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Title</dt>
+            <dd class="col-sm-10">@bookmark.Title</dd>
+            <dt class="col-sm-2">Rating</dt>
+            <dd class="col-sm-10">@bookmark.Rating</dd>
+            <dt class="col-sm-2">DateCreated</dt>
+            <dd class="col-sm-10">@bookmark.DateCreated</dd>
+            <dt class="col-sm-2">DateUpdated</dt>
+            <dd class="col-sm-10">@bookmark.DateUpdated</dd>
+            <dt class="col-sm-2">UserId</dt>
+            <dd class="col-sm-10">@bookmark.UserId</dd>
+            <dt class="col-sm-2">ReviewId</dt>
+            <dd class="col-sm-10">@bookmark.ReviewId</dd>
+        </dl>
+        <div>
+            <a href="@($"/bookmarks/edit?id={bookmark.Id}")">Edit</a> |
+            <a href="@($"/bookmarks")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Bookmark? bookmark;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        bookmark = await context.Bookmark.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (bookmark is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

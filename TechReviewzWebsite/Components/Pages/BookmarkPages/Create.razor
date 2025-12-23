@@ -1,0 +1,69 @@
+﻿@page "/bookmarks/create"
+@using Microsoft.EntityFrameworkCore
+@using TechReviewzWebsite.Domain
+@inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>Bookmark</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Bookmark" OnValidSubmit="AddBookmark" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="title" class="form-label">Title:</label> 
+                <InputText id="title" @bind-Value="Bookmark.Title" class="form-control" /> 
+                <ValidationMessage For="() => Bookmark.Title" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="rating" class="form-label">Rating:</label> 
+                <InputText id="rating" @bind-Value="Bookmark.Rating" class="form-control" /> 
+                <ValidationMessage For="() => Bookmark.Rating" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="datecreated" class="form-label">DateCreated:</label> 
+                <InputText id="datecreated" @bind-Value="Bookmark.DateCreated" class="form-control" /> 
+                <ValidationMessage For="() => Bookmark.DateCreated" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="dateupdated" class="form-label">DateUpdated:</label> 
+                <InputText id="dateupdated" @bind-Value="Bookmark.DateUpdated" class="form-control" /> 
+                <ValidationMessage For="() => Bookmark.DateUpdated" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="userid" class="form-label">UserId:</label> 
+                <InputNumber id="userid" @bind-Value="Bookmark.UserId" class="form-control" /> 
+                <ValidationMessage For="() => Bookmark.UserId" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="reviewid" class="form-label">ReviewId:</label> 
+                <InputNumber id="reviewid" @bind-Value="Bookmark.ReviewId" class="form-control" /> 
+                <ValidationMessage For="() => Bookmark.ReviewId" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/bookmarks">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Bookmark Bookmark { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddBookmark()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Bookmark.Add(Bookmark);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/bookmarks");
+    }
+}

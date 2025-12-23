@@ -1,0 +1,39 @@
+﻿@page "/connections"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using TechReviewzWebsite.Domain
+@using TechReviewzWebsite.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="connections/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Connection">
+    <PropertyColumn Property="connection => connection.Username" />
+    <PropertyColumn Property="connection => connection.Type" />
+    <PropertyColumn Property="connection => connection.ProfilePictureURL" />
+    <PropertyColumn Property="connection => connection.UserId" />
+
+    <TemplateColumn Context="connection">
+        <a href="@($"connections/edit?id={connection.Id}")">Edit</a> |
+        <a href="@($"connections/details?id={connection.Id}")">Details</a> |
+        <a href="@($"connections/delete?id={connection.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private TechReviewzWebsiteContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

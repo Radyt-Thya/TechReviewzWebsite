@@ -1,0 +1,67 @@
+﻿@page "/connections/delete"
+@using Microsoft.EntityFrameworkCore
+@using TechReviewzWebsite.Domain
+@inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Delete</PageTitle>
+
+<h1>Delete</h1>
+
+<p>Are you sure you want to delete this?</p>
+<div>
+    <h2>Connection</h2>
+    <hr />
+    @if (connection is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Username</dt>
+            <dd class="col-sm-10">@connection.Username</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Type</dt>
+            <dd class="col-sm-10">@connection.Type</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">ProfilePictureURL</dt>
+            <dd class="col-sm-10">@connection.ProfilePictureURL</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">UserId</dt>
+            <dd class="col-sm-10">@connection.UserId</dd>
+        </dl>
+        <EditForm method="post" Model="connection" OnValidSubmit="DeleteConnection" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(connection is null)">Delete</button> |
+            <a href="/connections">Back to List</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private Connection? connection;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        connection = await context.Connection.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (connection is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task DeleteConnection()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Connection.Remove(connection!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/connections");
+    }
+}

@@ -2,8 +2,9 @@
 {
     public class Connection : BaseDomainModel
     {
-        public required string Username { get; set; }
-        public string? ProfilePictureUrl { get; set; }
+        public string? Username { get; set; }
+        public string? Type { get; set; }
+        public string? ProfilePictureURL { get; set; }
         public int UserId { get; set; }
     }
 }

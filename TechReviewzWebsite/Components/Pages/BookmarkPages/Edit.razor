@@ -1,0 +1,114 @@
+﻿@page "/bookmarks/edit"
+@using Microsoft.EntityFrameworkCore
+@using TechReviewzWebsite.Domain
+@inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Bookmark</h2>
+<hr />
+@if (Bookmark is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Bookmark" OnValidSubmit="UpdateBookmark" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="Bookmark.Id" value="@Bookmark.Id" />
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title:</label>
+                    <InputText id="title" @bind-Value="Bookmark.Title" class="form-control" />
+                    <ValidationMessage For="() => Bookmark.Title" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="rating" class="form-label">Rating:</label>
+                    <InputText id="rating" @bind-Value="Bookmark.Rating" class="form-control" />
+                    <ValidationMessage For="() => Bookmark.Rating" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="datecreated" class="form-label">DateCreated:</label>
+                    <InputText id="datecreated" @bind-Value="Bookmark.DateCreated" class="form-control" />
+                    <ValidationMessage For="() => Bookmark.DateCreated" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="dateupdated" class="form-label">DateUpdated:</label>
+                    <InputText id="dateupdated" @bind-Value="Bookmark.DateUpdated" class="form-control" />
+                    <ValidationMessage For="() => Bookmark.DateUpdated" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="userid" class="form-label">UserId:</label>
+                    <InputNumber id="userid" @bind-Value="Bookmark.UserId" class="form-control" />
+                    <ValidationMessage For="() => Bookmark.UserId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="reviewid" class="form-label">ReviewId:</label>
+                    <InputNumber id="reviewid" @bind-Value="Bookmark.ReviewId" class="form-control" />
+                    <ValidationMessage For="() => Bookmark.ReviewId" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/bookmarks">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Bookmark? Bookmark { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Bookmark ??= await context.Bookmark.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Bookmark is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateBookmark()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Bookmark!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!BookmarkExists(Bookmark!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/bookmarks");
+    }
+
+    private bool BookmarkExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Bookmark.Any(e => e.Id == id);
+    }
+}
