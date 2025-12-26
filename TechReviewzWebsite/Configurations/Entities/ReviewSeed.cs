@@ -17,15 +17,17 @@ namespace TechReviewzWebsite.Configurations.Entities
                     Rating = 5,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
+                    ProductId = 1 
                 },
                 new Review
                 {
                     Id = 2,
-                    Title = "Laptop review",
+                    Title = "Iphone review",
                     Content = "battery life could be better.",
                     Rating = 4,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
+                    ProductId = 0
                 }
             );
         }

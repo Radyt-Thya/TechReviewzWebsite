@@ -1,10 +1,13 @@
 ﻿@page "/products"
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using TechReviewzWebsite.Domain
 @using TechReviewzWebsite.Data
 @implements IAsyncDisposable
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
+
+@attribute [Authorize(Roles = "Administrator, User")]
 
 <PageTitle>Index</PageTitle>
 
@@ -22,12 +25,15 @@
     <PropertyColumn Property="product => product.Price" />
     <PropertyColumn Property="product => product.DateCreated" />
     <PropertyColumn Property="product => product.ImageUrl" />
-    <PropertyColumn Property="product => product.ReviewId" />
 
     <TemplateColumn Context="product">
-        <a href="@($"products/edit?id={product.Id}")">Edit</a> |
-        <a href="@($"products/details?id={product.Id}")">Details</a> |
-        <a href="@($"products/delete?id={product.Id}")">Delete</a>
+        <AuthorizeView Roles="Administrator"> 
+            <a href="@($"products/edit?id={product.Id}")">Edit</a> |
+        </AuthorizeView>
+            <a href="@($"products/details?id={product.Id}")">Details</a> 
+        <AuthorizeView Roles="Administrator"> 
+            | <a href="@($"products/delete?id={product.Id}")">Delete</a>
+        </AuthorizeView>
     </TemplateColumn>
 </QuickGrid>
 

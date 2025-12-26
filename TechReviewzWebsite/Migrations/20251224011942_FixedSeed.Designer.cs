@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TechReviewzWebsite.Data;
 
@@ -11,9 +12,11 @@ using TechReviewzWebsite.Data;
 namespace TechReviewzWebsite.Migrations
 {
     [DbContext(typeof(TechReviewzWebsiteContext))]
-    partial class TechReviewzWebsiteContextModelSnapshot : ModelSnapshot
+    [Migration("20251224011942_FixedSeed")]
+    partial class FixedSeed
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -254,7 +257,7 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = "3781efa7-66dc-47f0-860f-e506d04102e4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8ad7b746-eaef-4a08-ab39-c99cc5da1c4d",
+                            ConcurrencyStamp = "3d05c1fb-a018-46e5-9a2b-aad9c036adad",
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
                             FirstName = "Admin",
@@ -262,9 +265,9 @@ namespace TechReviewzWebsite.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEbcIT/Y01ihkvACWsnpU4cBoKuPDDwQ3HJH9k6cRCZP3QmAdHwtawD0oucCc/RtKw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECSjBm5NUaBzPgPoLEsDYhEGwT4gvCjuYfUAuVeJxavrspiBjcBRqyM2j7LrgOruUw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "46ae64a5-5e0c-432c-b4f5-2ce879eb3ee9",
+                            SecurityStamp = "43929141-7c96-4d5a-bc2e-8b2c3f079360",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
                         });
@@ -383,6 +386,9 @@ namespace TechReviewzWebsite.Migrations
                     b.Property<float>("Price")
                         .HasColumnType("real");
 
+                    b.Property<int>("ReviewId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.ToTable("Product");
@@ -392,19 +398,21 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = 1,
                             Brand = "Apple",
-                            DateCreated = new DateTime(2025, 12, 26, 20, 33, 42, 445, DateTimeKind.Local).AddTicks(1452),
+                            DateCreated = new DateTime(2025, 12, 24, 9, 19, 40, 983, DateTimeKind.Local).AddTicks(6999),
                             Description = "Latest Apple smartphone with A15 Bionic chip",
                             Name = "iPhone 13",
-                            Price = 999f
+                            Price = 999f,
+                            ReviewId = 0
                         },
                         new
                         {
                             Id = 2,
                             Brand = "Samsung",
-                            DateCreated = new DateTime(2025, 12, 26, 20, 33, 42, 445, DateTimeKind.Local).AddTicks(1456),
+                            DateCreated = new DateTime(2025, 12, 24, 9, 19, 40, 983, DateTimeKind.Local).AddTicks(7003),
                             Description = "Flagship Samsung phone with excellent camera",
                             Name = "Samsung Galaxy S21",
-                            Price = 799f
+                            Price = 799f,
+                            ReviewId = 0
                         });
                 });
 
@@ -425,9 +433,6 @@ namespace TechReviewzWebsite.Migrations
                     b.Property<DateTime>("DateUpdated")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
                     b.Property<int>("Rating")
                         .HasColumnType("int");
 
@@ -446,9 +451,8 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = 1,
                             Content = "Amazing phone with great features!",
-                            DateCreated = new DateTime(2025, 12, 26, 20, 33, 42, 445, DateTimeKind.Local).AddTicks(955),
-                            DateUpdated = new DateTime(2025, 12, 26, 20, 33, 42, 445, DateTimeKind.Local).AddTicks(971),
-                            ProductId = 1,
+                            DateCreated = new DateTime(2025, 12, 24, 9, 19, 40, 983, DateTimeKind.Local).AddTicks(6568),
+                            DateUpdated = new DateTime(2025, 12, 24, 9, 19, 40, 983, DateTimeKind.Local).AddTicks(6585),
                             Rating = 5,
                             Title = "samsung review",
                             UserId = 0
@@ -457,11 +461,10 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = 2,
                             Content = "battery life could be better.",
-                            DateCreated = new DateTime(2025, 12, 26, 20, 33, 42, 445, DateTimeKind.Local).AddTicks(975),
-                            DateUpdated = new DateTime(2025, 12, 26, 20, 33, 42, 445, DateTimeKind.Local).AddTicks(976),
-                            ProductId = 0,
+                            DateCreated = new DateTime(2025, 12, 24, 9, 19, 40, 983, DateTimeKind.Local).AddTicks(6588),
+                            DateUpdated = new DateTime(2025, 12, 24, 9, 19, 40, 983, DateTimeKind.Local).AddTicks(6589),
                             Rating = 4,
-                            Title = "Iphone review",
+                            Title = "Laptop review",
                             UserId = 0
                         });
                 });

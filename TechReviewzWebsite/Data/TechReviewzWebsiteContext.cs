@@ -26,6 +26,11 @@ namespace TechReviewzWebsite.Data
 
             builder.ApplyConfiguration(new ProductSeed());
 
+            builder.ApplyConfiguration(new UserSeed());
+
+            builder.ApplyConfiguration(new RoleSeed());
+
+            builder.ApplyConfiguration(new UserRoleSeed());
         }
     }
 }

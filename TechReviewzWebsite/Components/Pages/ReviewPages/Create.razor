@@ -44,7 +44,28 @@
                 <label for="userid" class="form-label">UserId:</label> 
                 <InputNumber id="userid" @bind-Value="Review.UserId" class="form-control" /> 
                 <ValidationMessage For="() => Review.UserId" class="text-danger" /> 
-            </div>        
+            </div>
+            <div class="mb-3">
+                <label for="productid" class="form-label">Product:</label>
+                <InputNumber id="productid" @bind-Value="Review.ProductId" class="form-control" />
+                <ValidationMessage For="() => Review.ProductId" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label for="productid" class="form-label">Product:</label>
+                <InputSelect id="productid" @bind-Value="Review.ProductId" class="form-control">
+                    <option value="0">-- Select Product --</option>
+                    @if (Products?.Count > 0)
+                    {
+                        foreach (var p in Products)
+                        {
+                            <option value="@p.Id">@p.Name</option>
+                        }
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => Review.ProductId" class="text-danger" />
+            </div>
+
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
     </div>
@@ -57,6 +78,14 @@
 @code {
     [SupplyParameterFromForm]
     private Review Review { get; set; } = new();
+
+    private IList<Product>? Products;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Products = await context.Product.ToListAsync();
+    }
 
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddReview()

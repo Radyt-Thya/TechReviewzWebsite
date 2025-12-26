@@ -1,10 +1,13 @@
 ﻿@page "/comments"
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using TechReviewzWebsite.Domain
 @using TechReviewzWebsite.Data
 @implements IAsyncDisposable
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
+
+@attribute [Authorize(Roles = "Administrator, User")]
 
 <PageTitle>Index</PageTitle>
 
@@ -23,8 +26,10 @@
 
     <TemplateColumn Context="comments">
         <a href="@($"comments/edit?id={comments.Id}")">Edit</a> |
-        <a href="@($"comments/details?id={comments.Id}")">Details</a> |
-        <a href="@($"comments/delete?id={comments.Id}")">Delete</a>
+        <a href="@($"comments/details?id={comments.Id}")">Details</a>
+        <AuthorizeView Roles="Administrator"> 
+            | <a href="@($"comments/delete?id={comments.Id}")">Delete</a>
+        </AuthorizeView>
     </TemplateColumn>
 </QuickGrid>
 

@@ -50,11 +50,7 @@
                 <InputText id="imageurl" @bind-Value="Product.ImageUrl" class="form-control" /> 
                 <ValidationMessage For="() => Product.ImageUrl" class="text-danger" /> 
             </div>        
-            <div class="mb-3">
-                <label for="reviewid" class="form-label">ReviewId:</label> 
-                <InputNumber id="reviewid" @bind-Value="Product.ReviewId" class="form-control" /> 
-                <ValidationMessage For="() => Product.ReviewId" class="text-danger" /> 
-            </div>        
+
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
     </div>

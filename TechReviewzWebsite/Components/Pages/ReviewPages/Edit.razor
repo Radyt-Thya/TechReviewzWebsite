@@ -52,6 +52,11 @@ else
                     <InputNumber id="userid" @bind-Value="Review.UserId" class="form-control" />
                     <ValidationMessage For="() => Review.UserId" class="text-danger" />
                 </div>
+                <div class="mb-3">
+                    <label for="productid" class="form-label">Product:</label>
+                    <InputNumber id="productid" @bind-Value="Review.ProductId" class="form-control" />
+                    <ValidationMessage For="() => Review.ProductId" class="text-danger" />
+                </div>
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
         </div>

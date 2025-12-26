@@ -9,6 +9,5 @@
         public float Price { get; set; }
         public DateTime DateCreated { get; set; }
         public string? ImageUrl { get; set; }
-        public int ReviewId { get; set; }
     }
 }

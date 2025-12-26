@@ -8,5 +8,8 @@
         public DateTime DateCreated { get; set; }
         public DateTime DateUpdated { get; set; }
         public int UserId { get; set; }
+
+        // NEW: associate this review with a Product
+        public int ProductId { get; set; }
     }
 }
