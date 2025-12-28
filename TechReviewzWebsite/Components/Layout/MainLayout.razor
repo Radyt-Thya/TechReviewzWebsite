@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Authorization
 @inherits LayoutComponentBase
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 @attribute [Authorize(Roles = "Administrator, User")]
 
@@ -61,7 +62,7 @@
                                     Bookmark
                                 </label>
                             </a>
-                            <a href="/Reviews" class="menu_txt">
+                            <a href="/Reviews/Create" class="menu_txt">
                                 <label>
                                     <svg xmlns="http://www.w3.org/2000/svg" height="35px" viewBox="-10 -900 960 960" width="35px" fill="#e3e3e3"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" /></svg>
                                     Create a Review
@@ -109,8 +110,39 @@
     </main>
 </div>
 
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
-</div>
+@code {
+    private bool _applied;
+    private IJSObjectReference? _translatorModule;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _applied) return;
+
+        try
+        {
+            // import module from wwwroot/js/translate.js (absolute path)
+            _translatorModule = await JS.InvokeAsync<IJSObjectReference>("import", "/js/translate.js");
+
+            var lang = await _translatorModule.InvokeAsync<string?>("getSavedLanguage");
+            if (!string.IsNullOrEmpty(lang))
+            {
+                await _translatorModule.InvokeVoidAsync("translatePage", lang);
+            }
+
+            _applied = true;
+        }
+        catch
+        {
+            // Don't set _applied so client will retry; swallow errors during prerender
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_translatorModule is not null)
+        {
+            await _translatorModule.DisposeAsync();
+            _translatorModule = null;
+        }
+    }
+}

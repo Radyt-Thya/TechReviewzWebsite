@@ -1,8 +1,154 @@
 ﻿@page "/Settings"
 @rendermode InteractiveServer
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
 
-<h3>Settings</h3>
+<div class="background">
+    <div class="heading">
+        <h1><b>Settings</b></h1>
+    </div>
+
+    <div class="panel1">
+        <h2><b>Language</b></h2>
+
+        <div class="mb-3">
+            <label for="lang" class="form-label">Choose language</label>
+            <select id="lang" class="form-select" @bind="SelectedLang">
+                @foreach (var kv in Languages)
+                {
+                    <option value="@kv.Key">@kv.Value</option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-3 d-flex gap-2">
+            <button class="btn btn-primary" @onclick="ApplySiteLanguageAsync" disabled="@IsBusy">
+                @(IsBusy ? "Applying…" : "Apply language")
+            </button>
+            <button class="btn btn-outline-danger" @onclick="ResetLanguageAsync" disabled="@IsBusy">
+                Reset saved language
+            </button>
+        </div>
+
+        <div class="output mt-2 p-2 border bg-light">
+            @if (IsBusy)
+            {
+                <div>Working…</div>
+            }
+            else if (!string.IsNullOrEmpty(StatusMessage))
+            {
+                <div>@StatusMessage</div>
+            }
+            else
+            {
+                <div class="text-muted">Select a language and click "Apply to entire site" to translate all pages.</div>
+            }
+        </div>
+    </div>
+</div>
 
 @code {
+    private readonly Dictionary<string, string> Languages = new()
+    {
+        ["es"] = "Spanish",
+        ["fr"] = "French",
+        ["de"] = "German",
+        ["zh-CN"] = "Chinese (Simplified)",
+        ["hi"] = "Hindi",
+        ["pt"] = "Portuguese",
+        ["ja"] = "Japanese",
 
+    };
+
+    private string SelectedLang { get; set; } = "es";
+    private bool IsBusy { get; set; }
+    private string? StatusMessage { get; set; }
+
+    private IJSObjectReference? _module;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                // import the ES module from wwwroot/js/translate.js
+                _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/translate.js");
+
+                // pre-select saved language if present
+                var saved = await _module.InvokeAsync<string?>("getSavedLanguage");
+                if (!string.IsNullOrEmpty(saved) && Languages.ContainsKey(saved))
+                {
+                    SelectedLang = saved;
+                    StatusMessage = $"Saved language: {Languages[saved]}";
+                    StateHasChanged();
+                }
+            }
+            catch
+            {
+                // ignore; module may not load in prerender or dev environment
+            }
+        }
+    }
+
+    private async Task ApplySiteLanguageAsync()
+    {
+        StatusMessage = null;
+        if (string.IsNullOrWhiteSpace(SelectedLang)) return;
+
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.removeItem", "myTranslator:selectedLang");
+            IsBusy = true;
+            if (_module is null)
+            {
+                await JS.InvokeVoidAsync("localStorage.removeItem", "myTranslator:selectedLang");
+                _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/translate.js");
+            }
+
+            // ensure _module imported (see OnAfterRenderAsync) then:
+            await _module.InvokeVoidAsync("translatePage", SelectedLang);
+            StatusMessage = $"Applied {Languages.GetValueOrDefault(SelectedLang, SelectedLang)} to site.";
+        }
+        catch (JSException jsex)
+        {
+            StatusMessage = $"JS error: {jsex.Message}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Translation failed.";
+            Console.Error.WriteLine(ex);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task TranslateCurrentPageAsync() => await ApplySiteLanguageAsync();
+
+    private async Task ResetLanguageAsync()
+    {
+        try
+        {
+            IsBusy = true;
+            // clear saved language and reload to original text
+            await JS.InvokeVoidAsync("localStorage.removeItem", "myTranslator:selectedLang");
+            StatusMessage = "Cleared saved language. Reloading page to restore original text…";
+            NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is not null)
+        {
+            await _module.DisposeAsync();
+            _module = null;
+        }
+    }
 }

@@ -1,39 +1,161 @@
 ﻿@page "/connections"
 @using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.QuickGrid
-@using TechReviewzWebsite.Domain
+@using TechReviewzWebsite.Components.Account
 @using TechReviewzWebsite.Data
-@implements IAsyncDisposable
-@inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
+@using TechReviewzWebsite.Domain
+@inject IDbContextFactory<TechReviewzWebsiteContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject IdentityUserAccessor UserAccessor
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Connections</PageTitle>
+<h3>Friends</h3>
+<hr />
 
-<h1>Index</h1>
+<h3>Following</h3>
+<hr />
 
-<p>
-    <a href="connections/create">Create New</a>
-</p>
+<h3>Pending</h3>
+<hr />
 
-<QuickGrid Class="table" Items="context.Connection">
-    <PropertyColumn Property="connection => connection.Username" />
-    <PropertyColumn Property="connection => connection.Type" />
-    <PropertyColumn Property="connection => connection.ProfilePictureURL" />
-    <PropertyColumn Property="connection => connection.UserId" />
+<h3>Connect with other People</h3>
+<hr />
 
-    <TemplateColumn Context="connection">
-        <a href="@($"connections/edit?id={connection.Id}")">Edit</a> |
-        <a href="@($"connections/details?id={connection.Id}")">Details</a> |
-        <a href="@($"connections/delete?id={connection.Id}")">Unfollow</a>
-    </TemplateColumn>
-</QuickGrid>
+@if (currentUserName is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var u in users)
+        {
+            if (u.UserName == currentUserName) { continue; }
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>@u.UserName</strong>
+                    @if (!string.IsNullOrEmpty(u.FirstName) || !string.IsNullOrEmpty(u.LastName))
+                    {
+                        <div class="small">@($"{u.FirstName} {u.LastName}")</div>
+                    }
+                </div>
+
+                <div class="btn-group">
+                    @if (IsFollowing(u.UserName!))
+                    {
+                        <button class="btn btn-secondary" disabled>Following</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-primary" @onclick="() => FollowUser(u.UserName!)">Follow</button>
+                    }
+
+                    @if (HasPendingFriendRequest(u.UserName!))
+                    {
+                        <button class="btn btn-warning" disabled>Request sent</button>
+                    }
+                    else if (IsFriend(u.UserName!))
+                    {
+                        <button class="btn btn-secondary" disabled>Friend</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-outline-success" @onclick="() => SendFriendRequest(u.UserName!)">Add friend</button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
 
 @code {
-    private TechReviewzWebsiteContext context = default!;
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
 
-    protected override void OnInitialized()
+    private string? currentUserName;
+    private IList<TechReviewzWebsiteUser> users = Array.Empty<TechReviewzWebsiteUser>();
+    private IList<Connection> connections = Array.Empty<Connection>();
+
+    protected override async Task OnInitializedAsync()
     {
-        context = DbFactory.CreateDbContext();
+        using var context = DbFactory.CreateDbContext();
+
+        var currentUser = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        currentUserName = currentUser?.UserName;
+
+        users = await context.Users.AsNoTracking().ToListAsync();
+        connections = await context.Connection.AsNoTracking().ToListAsync();
     }
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+    private bool IsFollowing(string targetUsername)
+        => connections.Any(c =>
+            c.Username == currentUserName &&
+            c.TargetUsername == targetUsername &&
+            c.Relation == "Follow" &&
+            c.Status == "Accepted");
+
+    private bool HasPendingFriendRequest(string targetUsername)
+        => connections.Any(c =>
+            c.Username == currentUserName &&
+            c.TargetUsername == targetUsername &&
+            c.Relation == "Friend" &&
+            c.Status == "Pending");
+
+    private bool IsFriend(string targetUsername)
+        => connections.Any(c =>
+            (c.Username == currentUserName && c.TargetUsername == targetUsername ||
+             c.Username == targetUsername && c.TargetUsername == currentUserName)
+            && c.Relation == "Friend" && c.Status == "Accepted");
+
+    private async Task FollowUser(string targetUsername)
+    {
+        if (string.IsNullOrEmpty(currentUserName) || targetUsername == currentUserName) return;
+
+        using var context = DbFactory.CreateDbContext();
+
+        // prevent duplicates
+        var exists = await context.Connection
+            .AnyAsync(c => c.Username == currentUserName && c.TargetUsername == targetUsername && c.Relation == "Follow");
+
+        if (exists) return;
+
+        context.Connection.Add(new Connection
+        {
+            Username = currentUserName,
+            TargetUsername = targetUsername,
+            Relation = "Follow",
+            Status = "Accepted",
+            ProfilePictureURL = null
+        });
+
+        await context.SaveChangesAsync();
+
+        connections = await context.Connection.AsNoTracking().ToListAsync();
+        StateHasChanged();
+    }
+
+    private async Task SendFriendRequest(string targetUsername)
+    {
+        if (string.IsNullOrEmpty(currentUserName) || targetUsername == currentUserName) return;
+
+        using var context = DbFactory.CreateDbContext();
+
+        // prevent duplicates
+        var exists = await context.Connection
+            .AnyAsync(c => c.Username == currentUserName && c.TargetUsername == targetUsername && c.Relation == "Friend");
+
+        if (exists) return;
+
+        context.Connection.Add(new Connection
+        {
+            Username = currentUserName,
+            TargetUsername = targetUsername,
+            Relation = "Friend",
+            Status = "Pending",
+        });
+
+        await context.SaveChangesAsync();
+
+        connections = await context.Connection.AsNoTracking().ToListAsync();
+        StateHasChanged();
+    }
 }

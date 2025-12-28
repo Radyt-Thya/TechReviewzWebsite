@@ -1,4 +1,4 @@
-﻿@page "/Register"
+﻿@page "/Registration"
 @rendermode InteractiveServer
 @inject NavigationManager Navigation
 
@@ -23,7 +23,7 @@
 @inject RoleManager<IdentityRole> RoleManager
 @layout AccountLayout
 
-<PageTitle>Registration</PageTitle>
+<PageTitle>Register</PageTitle>
 
 <div class="background">
         <StatusMessage Message="@Message" />
@@ -33,7 +33,7 @@
                 <h1><b>Create an Account</b></h1>
             </div>
             <div class="panel1">
-            <ValidationSummary class="text-danger" role="alert" />
+            @* <ValidationSummary class="text-danger" role="alert" /> *@
             <div class="details">
                 <h3><b>Profile Picture</b></h3>
                 <div class="profile">

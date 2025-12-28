@@ -1,6 +1,6 @@
-.background {
+﻿.background {
     position: absolute;
-    height: 900px;
+    height: 855px;
     width: 100%;
     top: 60px;
     left: 0;
@@ -9,7 +9,7 @@
 
 .panel1 {
     position: absolute;
-    height: 80%;
+    height: 75%;
     width: 90%;
     top: 135px;
     left: 100px;
@@ -25,27 +25,4 @@
     font-size: 24px;
     color: black;
     z-index: 2;
-}
-
-.finish_later_txt {
-    position: absolute;
-    left: 88%;
-    top: 2%;
-    padding: 50px;
-    color: black;
-    z-index: 2;
-}
-
-.profile {
-    display: absolute;
-}
-
-.details {
-    padding: 10px;
-    margin-bottom: 20px;
-}
-
-.details_name {
-    display: block;
-    width: 100%;
 }

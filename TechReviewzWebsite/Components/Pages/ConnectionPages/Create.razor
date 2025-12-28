@@ -19,12 +19,22 @@
                 <label for="username" class="form-label">Username:</label> 
                 <InputText id="username" @bind-Value="Connection.Username" class="form-control" /> 
                 <ValidationMessage For="() => Connection.Username" class="text-danger" /> 
-            </div>        
+            </div>
             <div class="mb-3">
-                <label for="type" class="form-label">Type:</label> 
-                <InputText id="type" @bind-Value="Connection.Type" class="form-control" /> 
-                <ValidationMessage For="() => Connection.Type" class="text-danger" /> 
-            </div>        
+                <label for="targetusername" class="form-label">TargetUsername:</label>
+                <InputText id="targetusername" @bind-Value="Connection.TargetUsername" class="form-control" />
+                <ValidationMessage For="() => Connection.TargetUsername" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="relation" class="form-label">Relation:</label>
+                <InputText id="relation" @bind-Value="Connection.Relation" class="form-control" />
+                <ValidationMessage For="() => Connection.Relation" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="status" class="form-label">Status:</label>
+                <InputText id="status" @bind-Value="Connection.Status" class="form-control" />
+                <ValidationMessage For="() => Connection.Status" class="text-danger" />
+            </div>
             <div class="mb-3">
                 <label for="profilepictureurl" class="form-label">ProfilePictureURL:</label> 
                 <InputText id="profilepictureurl" @bind-Value="Connection.ProfilePictureURL" class="form-control" /> 

@@ -2,21 +2,27 @@
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Identity.UI.Services
+@using Microsoft.AspNetCore.WebUtilities
+@using System.Text
+@using System.Text.Encodings.Web
 @using TechReviewzWebsite.Data
 
 @inject UserManager<TechReviewzWebsiteUser> UserManager
 @inject SignInManager<TechReviewzWebsiteUser> SignInManager
 @inject IdentityUserAccessor UserAccessor
 @inject IdentityRedirectManager RedirectManager
+@inject IEmailSender<TechReviewzWebsiteUser> EmailSender
+@inject NavigationManager NavigationManager
 
 <PageTitle>Profile</PageTitle>
 
-<h3>Profile</h3>
+<h3><b>Change Profile Details</b></h3>
 <StatusMessage />
 
 <div class="row">
     <div class="col-md-6">
-        <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
+        <EditForm Model="Input" FormName="changeprofiledetails" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
             <div class="form-floating mb-3">
@@ -24,19 +30,51 @@
                 <label for="username" class="form-label">Username</label>
             </div>
             <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Gender" class="form-control" placeholder="Choose a gender." />
+                <label for="gender" class="form-label">Gender</label>
+                <ValidationMessage For="() => Input.Gender" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
                 <InputText @bind-Value="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
                 <label for="phone-number" class="form-label">Phone number</label>
                 <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+            @if (isEmailConfirmed)
+            {
+                <div class="form-floating mb-3 input-group">
+                    <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
+                    <div class="input-group-append">
+                        <span class="h-100 input-group-text text-success font-weight-bold">?</span>
+                    </div>
+                    <label for="email" class="form-label">Email</label>
+                </div>
+            }
+            else
+            {
+                <div class="form-floating mb-3">
+                    <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
+                    <label for="email" class="form-label">Email</label>
+                    <button type="submit" class="btn btn-link" form="send-verification-form">Send verification email</button>
+                </div>
+            }
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="Please enter new email." />
+                <label for="new-email" class="form-label">New email</label>
+                <ValidationMessage For="() => Input.NewEmail" class="text-danger" />
+            </div>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Save details</button>
         </EditForm>
     </div>
 </div>
 
 @code {
+    private string? message;
     private TechReviewzWebsiteUser user = default!;
     private string? username;
+    private string? gender;
     private string? phoneNumber;
+    private string? email;
+    private bool isEmailConfirmed;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -48,30 +86,90 @@
     {
         user = await UserAccessor.GetRequiredUserAsync(HttpContext);
         username = await UserManager.GetUserNameAsync(user);
+        gender = user.Gender; // FIX: Directly access the Gender property
         phoneNumber = await UserManager.GetPhoneNumberAsync(user);
+        email = await UserManager.GetEmailAsync(user);
+        isEmailConfirmed = await UserManager.IsEmailConfirmedAsync(user);
 
         Input.PhoneNumber ??= phoneNumber;
+        Input.Gender ??= gender; // Optionally prefill Gender in the form
+        Input.NewEmail ??= email;
     }
 
     private async Task OnValidSubmitAsync()
     {
+        // Handle email change first (so we send confirmation before any redirect)
+        if (!string.IsNullOrWhiteSpace(Input.NewEmail) && Input.NewEmail != email)
+        {
+            var userId = await UserManager.GetUserIdAsync(user);
+            var code = await UserManager.GenerateChangeEmailTokenAsync(user, Input.NewEmail);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+                NavigationManager.ToAbsoluteUri("Account/ConfirmEmailChange").AbsoluteUri,
+                new Dictionary<string, object?> { ["userId"] = userId, ["email"] = Input.NewEmail, ["code"] = code });
+
+            // Use injected EmailSender (make sure it's implemented and configured)
+            await EmailSender.SendConfirmationLinkAsync(user, Input.NewEmail, HtmlEncoder.Default.Encode(callbackUrl));
+
+            // Inform the user and stop further processing (no profile redirect)
+            RedirectManager.RedirectToCurrentPageWithStatus("Confirmation link to change email sent. Please check your email.", HttpContext);
+            return;
+        }
+
+        // Profile updates
         if (Input.PhoneNumber != phoneNumber)
         {
             var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
             if (!setPhoneResult.Succeeded)
             {
                 RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
+                return;
             }
+        }
+
+        // Optionally update Gender if changed
+        if (Input.Gender != gender)
+        {
+            user.Gender = Input.Gender;
+            await UserManager.UpdateAsync(user);
         }
 
         await SignInManager.RefreshSignInAsync(user);
         RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
     }
 
+    private async Task OnSendEmailVerificationAsync()
+    {
+        if (email is null)
+        {
+            return;
+        }
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+
+        // FIX: call the injected instance (EmailSender)
+        await EmailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(callbackUrl));
+
+        message = "Verification email sent. Please check your email.";
+    }
+
     private sealed class InputModel
     {
+        [Display(Name = "Gender")]
+        public string? Gender { get; set; }
+
         [Phone]
         [Display(Name = "Phone number")]
         public string? PhoneNumber { get; set; }
+
+        [Required]
+        [EmailAddress]
+        [Display(Name = "New email")]
+        public string? NewEmail { get; set; }
     }
 }
