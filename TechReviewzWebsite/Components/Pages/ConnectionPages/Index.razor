@@ -1,5 +1,6 @@
 ﻿@page "/connections"
 @using Microsoft.EntityFrameworkCore
+@using System.Linq
 @using TechReviewzWebsite.Components.Account
 @using TechReviewzWebsite.Data
 @using TechReviewzWebsite.Domain
@@ -8,17 +9,27 @@
 @inject IdentityUserAccessor UserAccessor
 
 <PageTitle>Connections</PageTitle>
-<h3>Friends</h3>
+
+<h3>Followers (@FollowerCount)</h3>
 <hr />
 
-<h3>Following</h3>
-<hr />
+@if (!string.IsNullOrEmpty(StatusMessage))
+{
+    <div class="alert alert-info">@StatusMessage</div>
+}
 
-<h3>Pending</h3>
-<hr />
-
-<h3>Connect with other People</h3>
-<hr />
+@* Following count shown at the top (how many people the current user is following) *@
+@if (currentUserName is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="mb-3">
+        <h3>Following (@FollowingCount)</h3>
+        <hr />
+    </div>
+}
 
 @if (currentUserName is null)
 {
@@ -26,46 +37,75 @@
 }
 else
 {
-    <div class="list-group">
-        @foreach (var u in users)
-        {
-            if (u.UserName == currentUserName) { continue; }
-            <div class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                    <strong>@u.UserName</strong>
-                    @if (!string.IsNullOrEmpty(u.FirstName) || !string.IsNullOrEmpty(u.LastName))
-                    {
-                        <div class="small">@($"{u.FirstName} {u.LastName}")</div>
-                    }
-                </div>
+    var followingUsers = users.Where(u => !string.IsNullOrEmpty(u.UserName) && IsFollowing(u.UserName)).ToList();
+    if (!followingUsers.Any())
+    {
+        <div class="text-muted">You are not following anyone yet.</div>
+    }
+    else
+    {
+        <div class="list-group mb-4">
+            @foreach (var u in followingUsers)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-center" id="following-@u.UserName">
+                    <div>
+                        <strong>@u.UserName</strong>
+                        @if (!string.IsNullOrEmpty(u.FirstName) || !string.IsNullOrEmpty(u.LastName))
+                        {
+                            <div class="small">@($"{u.FirstName} {u.LastName}")</div>
+                        }
+                    </div>
 
-                <div class="btn-group">
-                    @if (IsFollowing(u.UserName!))
-                    {
-                        <button class="btn btn-secondary" disabled>Following</button>
-                    }
-                    else
-                    {
-                        <button class="btn btn-outline-primary" @onclick="() => FollowUser(u.UserName!)">Follow</button>
-                    }
-
-                    @if (HasPendingFriendRequest(u.UserName!))
-                    {
-                        <button class="btn btn-warning" disabled>Request sent</button>
-                    }
-                    else if (IsFriend(u.UserName!))
-                    {
-                        <button class="btn btn-secondary" disabled>Friend</button>
-                    }
-                    else
-                    {
-                        <button class="btn btn-outline-success" @onclick="() => SendFriendRequest(u.UserName!)">Add friend</button>
-                    }
+                    <div class="btn-group">
+                        <button class="btn btn-outline-danger" onclick="unfollowUser('@u.UserName', this)">Unfollow</button>
+                    </div>
                 </div>
-            </div>
-        }
-    </div>
+            }
+        </div>
+    }
 }
+
+<h3>Connect with other People</h3>
+<hr />
+@if (currentUserName is null)
+{
+    <!-- nothing to show -->
+}
+else
+{
+    var otherUsers = users
+        .Where(u => !string.IsNullOrEmpty(u.UserName) && u.UserName != currentUserName && !IsFollowing(u.UserName))
+        .ToList();
+
+    if (!otherUsers.Any())
+    {
+        <div class="text-muted">No more people to follow.</div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var u in otherUsers)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-center" id="user-@u.UserName">
+                    <div>
+                        <strong>@u.UserName</strong>
+                        @if (!string.IsNullOrEmpty(u.FirstName) || !string.IsNullOrEmpty(u.LastName))
+                        {
+                            <div class="small">@($"{u.FirstName} {u.LastName}")</div>
+                        }
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-outline-primary" onclick="followUser('@u.UserName', this)">Follow</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+@* include client-side helper that calls the minimal API *@
+<script src="/js/follow.js"></script>
 
 @code {
     [CascadingParameter]
@@ -74,8 +114,26 @@ else
     private string? currentUserName;
     private IList<TechReviewzWebsiteUser> users = Array.Empty<TechReviewzWebsiteUser>();
     private IList<Connection> connections = Array.Empty<Connection>();
+    private string? StatusMessage;
+
+    // computed count of people the current user is following
+    private int FollowingCount => connections.Count(c =>
+        c.Username == currentUserName &&
+        c.Relation == "Follow" &&
+        c.Status == "Accepted");
+
+    // computed follower count for the current user
+    private int FollowerCount => connections.Count(c =>
+        c.TargetUsername == currentUserName &&
+        c.Relation == "Follow" &&
+        c.Status == "Accepted");
 
     protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
     {
         using var context = DbFactory.CreateDbContext();
 
@@ -92,70 +150,4 @@ else
             c.TargetUsername == targetUsername &&
             c.Relation == "Follow" &&
             c.Status == "Accepted");
-
-    private bool HasPendingFriendRequest(string targetUsername)
-        => connections.Any(c =>
-            c.Username == currentUserName &&
-            c.TargetUsername == targetUsername &&
-            c.Relation == "Friend" &&
-            c.Status == "Pending");
-
-    private bool IsFriend(string targetUsername)
-        => connections.Any(c =>
-            (c.Username == currentUserName && c.TargetUsername == targetUsername ||
-             c.Username == targetUsername && c.TargetUsername == currentUserName)
-            && c.Relation == "Friend" && c.Status == "Accepted");
-
-    private async Task FollowUser(string targetUsername)
-    {
-        if (string.IsNullOrEmpty(currentUserName) || targetUsername == currentUserName) return;
-
-        using var context = DbFactory.CreateDbContext();
-
-        // prevent duplicates
-        var exists = await context.Connection
-            .AnyAsync(c => c.Username == currentUserName && c.TargetUsername == targetUsername && c.Relation == "Follow");
-
-        if (exists) return;
-
-        context.Connection.Add(new Connection
-        {
-            Username = currentUserName,
-            TargetUsername = targetUsername,
-            Relation = "Follow",
-            Status = "Accepted",
-            ProfilePictureURL = null
-        });
-
-        await context.SaveChangesAsync();
-
-        connections = await context.Connection.AsNoTracking().ToListAsync();
-        StateHasChanged();
-    }
-
-    private async Task SendFriendRequest(string targetUsername)
-    {
-        if (string.IsNullOrEmpty(currentUserName) || targetUsername == currentUserName) return;
-
-        using var context = DbFactory.CreateDbContext();
-
-        // prevent duplicates
-        var exists = await context.Connection
-            .AnyAsync(c => c.Username == currentUserName && c.TargetUsername == targetUsername && c.Relation == "Friend");
-
-        if (exists) return;
-
-        context.Connection.Add(new Connection
-        {
-            Username = currentUserName,
-            TargetUsername = targetUsername,
-            Relation = "Friend",
-            Status = "Pending",
-        });
-
-        await context.SaveChangesAsync();
-
-        connections = await context.Connection.AsNoTracking().ToListAsync();
-        StateHasChanged();
-    }
 }

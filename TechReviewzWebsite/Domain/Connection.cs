@@ -2,21 +2,21 @@
 {
     public class Connection : BaseDomainModel
     {
-        // who owns this connection (your username or domain user id if you prefer)
+        // Owner of this connection (username)
         public string? Username { get; set; }
 
-        // the target user this connection refers to
+        // The target user this connection refers to (username)
         public string? TargetUsername { get; set; }
 
-        // relationship type: "Follow" or "Friend"
+        // relationship type: currently only "Follow" is used
         public string? Relation { get; set; }
 
-        // Friend request state: "Pending", "Accepted", "Rejected" (for follows you can set "Accepted" immediately)
+        // State for the relation (for follows use "Accepted")
         public string? Status { get; set; }
 
         public string? ProfilePictureURL { get; set; }
 
-        // keep existing UserId if other logic depends on it (optional)
+        // Keep existing UserId in case other logic depends on it
         public int UserId { get; set; }
     }
 }

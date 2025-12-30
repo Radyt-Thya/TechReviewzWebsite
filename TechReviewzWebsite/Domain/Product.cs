@@ -8,6 +8,7 @@
         public string? Brand { get; set; }
         public float Price { get; set; }
         public DateTime DateCreated { get; set; }
+        public DateTime DateUpdated { get; set; }
         public string? ImageUrl { get; set; }
     }
 }

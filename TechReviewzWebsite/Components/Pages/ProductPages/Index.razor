@@ -1,4 +1,6 @@
 ﻿@page "/products"
+@page "/products/{category}"
+@using System.Linq
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
@@ -6,44 +8,98 @@
 @using TechReviewzWebsite.Data
 @implements IAsyncDisposable
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
+@inject NavigationManager NavigationManager
 
 @attribute [Authorize(Roles = "Administrator, User")]
 
 <PageTitle>Index</PageTitle>
 
-<h1>Index</h1>
+<h1><b>Products</b></h1>
 
 <p>
-    <a href="products/create">Create New</a>
+    <AuthorizeView Roles="Administrator">
+        <Authorized>
+            <a href="/products/create">Create New</a>
+        </Authorized>
+    </AuthorizeView>
 </p>
 
-<QuickGrid Class="table" Items="context.Product">
+<QuickGrid TItem="Product" Class="table" Items="@(Products.AsQueryable())">
     <PropertyColumn Property="product => product.Name" />
     <PropertyColumn Property="product => product.Description" />
     <PropertyColumn Property="product => product.Category" />
     <PropertyColumn Property="product => product.Brand" />
     <PropertyColumn Property="product => product.Price" />
     <PropertyColumn Property="product => product.DateCreated" />
+    <PropertyColumn Property="product => product.DateUpdated" />
     <PropertyColumn Property="product => product.ImageUrl" />
 
     <TemplateColumn Context="product">
-        <AuthorizeView Roles="Administrator"> 
-            <a href="@($"products/edit?id={product.Id}")">Edit</a> |
+        <AuthorizeView Roles="Administrator">
+            <Authorized>
+                <a href="@($"/products/edit?id={product.Id}")">Edit</a> |
+            </Authorized>
         </AuthorizeView>
-            <a href="@($"products/details?id={product.Id}")">Details</a> 
-        <AuthorizeView Roles="Administrator"> 
-            | <a href="@($"products/delete?id={product.Id}")">Delete</a>
+
+        <a href="@($"/products/details?id={product.Id}")">Details</a>
+
+        <AuthorizeView Roles="Administrator">
+            <Authorized>
+                | <a href="@($"/products/delete?id={product.Id}")">Delete</a>
+            </Authorized>
         </AuthorizeView>
     </TemplateColumn>
 </QuickGrid>
 
 @code {
+    [Parameter]
+    public string? category { get; set; } // captured from route: slug
+
     private TechReviewzWebsiteContext context = default!;
+    private List<Product> Products { get; set; } = new();
 
     protected override void OnInitialized()
     {
         context = DbFactory.CreateDbContext();
     }
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+    protected override async Task OnParametersSetAsync()
+    {
+        // category is a slug (e.g. "smartphones-tablets") — convert back to display or match DB values
+        string? categoryFilter = null;
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            categoryFilter = DecodeSlugToDisplay(category);
+        }
+
+        await LoadProductsAsync(categoryFilter);
+    }
+
+    private static string DecodeSlugToDisplay(string slug)
+    {
+        // Basic decode: replace dashes with spaces and fix "and"
+        var decoded = Uri.UnescapeDataString(slug).Replace('-', ' ');
+        return decoded.Replace(" and ", " & ", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task LoadProductsAsync(string? categoryFilter)
+    {
+        var query = context.Product.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrEmpty(categoryFilter))
+        {
+            // comparison may need normalization depending on how Category is stored in DB
+            query = query.Where(p => p.Category == categoryFilter);
+        }
+
+        Products = await query.ToListAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (context is not null)
+        {
+            await context.DisposeAsync();
+        }
+    }
 }

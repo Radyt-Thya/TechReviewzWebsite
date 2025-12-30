@@ -37,7 +37,14 @@ else
                 </div>
                 <div class="mb-3">
                     <label for="category" class="form-label">Category:</label>
-                    <InputText id="category" @bind-Value="Product.Category" class="form-control" />
+                    <InputSelect id="category" @bind-Value="Product.Category" class="form-select">
+                        <option value="">-- Select Category --</option>
+                        @foreach (var c in Categories)
+                        {
+                            <option value="@c">@c</option>
+                        }
+                    </InputSelect>
+
                     <ValidationMessage For="() => Product.Category" class="text-danger" />
                 </div>
                 <div class="mb-3">
@@ -50,10 +57,15 @@ else
                     <InputNumber id="price" @bind-Value="Product.Price" class="form-control" />
                     <ValidationMessage For="() => Product.Price" class="text-danger" />
                 </div>
-                <div class="mb-3">
+                <div class="mb-3" hidden>
                     <label for="datecreated" class="form-label">DateCreated:</label>
                     <InputDate id="datecreated" @bind-Value="Product.DateCreated" class="form-control" />
                     <ValidationMessage For="() => Product.DateCreated" class="text-danger" />
+                </div>
+                <div class="mb-3" hidden>
+                    <label for="dateppdated" class="form-label">DateUpdated:</label>
+                    <InputDate id="dateppdated" @bind-Value="Product.DateUpdated" class="form-control" />
+                    <ValidationMessage For="() => Product.DateUpdated" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="imageurl" class="form-label">ImageUrl:</label>
@@ -77,6 +89,17 @@ else
     [SupplyParameterFromForm]
     private Product? Product { get; set; }
 
+    private readonly List<string> Categories = new()
+    {
+        "Laptops",
+        "Smartphones & Tablets",
+        "Personal Computer (PC)",
+        "PC Components",
+        "Peripherals",
+        "Wearables",
+        "Home Appliances"
+    };
+
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
@@ -91,6 +114,11 @@ else
     private async Task UpdateProduct()
     {
         using var context = DbFactory.CreateDbContext();
+
+        //Set the DateCreated and DateUpdated fields to the current date and time.
+        Product.DateCreated = DateTime.Now;
+        Product.DateUpdated = DateTime.Now;
+
         context.Attach(Product!).State = EntityState.Modified;
 
         try

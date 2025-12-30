@@ -1,5 +1,6 @@
 ﻿@page "/reviews/create"
 @using Microsoft.EntityFrameworkCore
+@using TechReviewzWebsite.Data
 @using TechReviewzWebsite.Domain
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
 @inject NavigationManager NavigationManager
@@ -24,33 +25,47 @@
                 <label for="content" class="form-label">Content:</label> 
                 <InputText id="content" @bind-Value="Review.Content" class="form-control" /> 
                 <ValidationMessage For="() => Review.Content" class="text-danger" /> 
-            </div>        
+            </div>
             <div class="mb-3">
-                <label for="rating" class="form-label">Rating:</label> 
-                <InputNumber id="rating" @bind-Value="Review.Rating" class="form-control" /> 
+                <label for="category" class="form-label">Category:</label>
+                <InputSelect id="category" @bind-Value="Review.Category" class="form-select">
+                    <option value="">-- Select Category --</option>
+                    @foreach (var c in Categories)
+                    {
+                        <option value="@c">@c</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => Review.Category" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="rating" class="form-label">Rating:</label>
+                <InputSelect id="rating" @bind-Value="Review.Rating" class="form-control">
+                    <option value="0">-- Select Rating --</option>
+                    @if (Rating?.Count > 0)
+                    {
+                        foreach (var r in Rating)
+                        {
+                            <option value="@r">@r</option>
+                        }
+                    }
+                </InputSelect>
                 <ValidationMessage For="() => Review.Rating" class="text-danger" /> 
             </div>        
-            <div class="mb-3">
+            <div class="mb-3" hidden>
                 <label for="datecreated" class="form-label">DateCreated:</label> 
                 <InputDate id="datecreated" @bind-Value="Review.DateCreated" class="form-control" /> 
                 <ValidationMessage For="() => Review.DateCreated" class="text-danger" /> 
             </div>        
-            <div class="mb-3">
+            <div class="mb-3" hidden>
                 <label for="dateupdated" class="form-label">DateUpdated:</label> 
                 <InputDate id="dateupdated" @bind-Value="Review.DateUpdated" class="form-control" /> 
                 <ValidationMessage For="() => Review.DateUpdated" class="text-danger" /> 
             </div>        
             <div class="mb-3">
-                <label for="userid" class="form-label">UserId:</label> 
-                <InputNumber id="userid" @bind-Value="Review.UserId" class="form-control" /> 
-                <ValidationMessage For="() => Review.UserId" class="text-danger" /> 
+                    <label for="userid" class="form-label">User:</label>
+                    <InputNumber id="userid" @bind-Value="Review.UserId" class="form-control" />
+                    <ValidationMessage For="() => Review.UserId" class="text-danger" />
             </div>
-            <div class="mb-3">
-                <label for="productid" class="form-label">Product:</label>
-                <InputNumber id="productid" @bind-Value="Review.ProductId" class="form-control" />
-                <ValidationMessage For="() => Review.ProductId" class="text-danger" />
-            </div>
-
             <div class="mb-3">
                 <label for="productid" class="form-label">Product:</label>
                 <InputSelect id="productid" @bind-Value="Review.ProductId" class="form-control">
@@ -79,7 +94,28 @@
     [SupplyParameterFromForm]
     private Review Review { get; set; } = new();
 
+    private readonly List<string> Categories = new()
+    {
+        "Laptops",
+        "Smartphones & Tablets",
+        "Personal Computer (PC)",
+        "PC Components",
+        "Peripherals",
+        "Wearables",
+        "Home Appliances"
+    };
+
+    private readonly List<string> Rating = new()
+    {
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+    };
+
     private IList<Product>? Products;
+    private IList<TechReviewzWebsiteUser>? Users;
 
     protected override async Task OnInitializedAsync()
     {
@@ -91,6 +127,11 @@
     private async Task AddReview()
     {
         using var context = DbFactory.CreateDbContext();
+
+        //Set the DateCreated and DateUpdated fields to the current date and time.
+        Review.DateCreated = DateTime.Now;
+        Review.DateUpdated = DateTime.Now;
+
         context.Review.Add(Review);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/reviews");

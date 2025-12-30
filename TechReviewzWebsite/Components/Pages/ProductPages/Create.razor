@@ -26,8 +26,14 @@
                 <ValidationMessage For="() => Product.Description" class="text-danger" /> 
             </div>        
             <div class="mb-3">
-                <label for="category" class="form-label">Category:</label> 
-                <InputText id="category" @bind-Value="Product.Category" class="form-control" /> 
+                <label for="category" class="form-label">Category:</label>
+                <InputSelect id="category" @bind-Value="Product.Category" class="form-select">
+                    <option value="">-- Select Category --</option>
+                    @foreach (var c in Categories)
+                    {
+                        <option value="@c">@c</option>
+                    }
+                </InputSelect>
                 <ValidationMessage For="() => Product.Category" class="text-danger" /> 
             </div>        
             <div class="mb-3">
@@ -40,11 +46,16 @@
                 <InputNumber id="price" @bind-Value="Product.Price" class="form-control" /> 
                 <ValidationMessage For="() => Product.Price" class="text-danger" /> 
             </div>        
-            <div class="mb-3">
+            <div class="mb-3" hidden>
                 <label for="datecreated" class="form-label">DateCreated:</label> 
-                <InputDate id="datecreated" @bind-Value="Product.DateCreated" class="form-control" /> 
+                <InputDate id="datecreated" @bind-Value="Product.DateCreated" class="form-control" />
                 <ValidationMessage For="() => Product.DateCreated" class="text-danger" /> 
-            </div>        
+            </div>
+            <div class="mb-3" hidden>
+                <label for="dateppdated" class="form-label">DateUpdated:</label>
+                <InputDate id="dateppdated" @bind-Value="Product.DateUpdated" class="form-control" />
+                <ValidationMessage For="() => Product.DateUpdated" class="text-danger" />
+            </div>
             <div class="mb-3">
                 <label for="imageurl" class="form-label">ImageUrl:</label> 
                 <InputText id="imageurl" @bind-Value="Product.ImageUrl" class="form-control" /> 
@@ -64,12 +75,30 @@
     [SupplyParameterFromForm]
     private Product Product { get; set; } = new();
 
+    private readonly List<string> Categories = new()
+    {
+        "Laptops",
+        "Smartphones & Tablets",
+        "Personal Computer (PC)",
+        "PC Components",
+        "Peripherals",
+        "Wearables",
+        "Home Appliances"
+    };
+
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddProduct()
     {
         using var context = DbFactory.CreateDbContext();
+
+        //Set the DateCreated and DateUpdated fields to the current date and time.
+        Product.DateCreated = DateTime.Now;
+        Product.DateUpdated = DateTime.Now;
+
         context.Product.Add(Product);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/products");
     }
+
+
 }
