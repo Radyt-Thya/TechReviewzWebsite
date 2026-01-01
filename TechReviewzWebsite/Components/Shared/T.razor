@@ -1,0 +1,45 @@
+@inject TranslationService TranslationService
+@inject TranslationStateService StateService
+@implements IDisposable
+
+@((MarkupString)(TranslatedText ?? Text))
+
+@code {
+    [Parameter, EditorRequired]
+    public string Text { get; set; } = "";
+
+    private string? TranslatedText { get; set; }
+
+    protected override void OnInitialized()
+    {
+        StateService.OnLanguageChanged += Refresh;
+        UpdateTranslation();
+    }
+
+    private async void Refresh()
+    {
+        await InvokeAsync(() =>
+        {
+            UpdateTranslation();
+            StateHasChanged();
+        });
+    }
+
+    private async void UpdateTranslation()
+    {
+        if (string.IsNullOrWhiteSpace(StateService.CurrentLanguage))
+        {
+            TranslatedText = Text;
+        }
+        else
+        {
+            TranslatedText = await TranslationService.TranslateTextAsync(Text, StateService.CurrentLanguage) ?? Text;
+        }
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        StateService.OnLanguageChanged -= Refresh;
+    }
+}

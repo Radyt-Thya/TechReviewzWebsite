@@ -16,7 +16,7 @@ namespace TechReviewzWebsite.Configurations.Entities
                     Brand = "Apple",
                     Description = "Latest Apple smartphone with A15 Bionic chip",
                     Price = 999,
-                    DateCreated = DateTime.Now
+                    DateReleased = DateTime.Now
                 },
                 new Product
                 {
@@ -25,7 +25,7 @@ namespace TechReviewzWebsite.Configurations.Entities
                     Brand = "Samsung",
                     Description = "Flagship Samsung phone with excellent camera",
                     Price = 799,
-                    DateCreated = DateTime.Now
+                    DateReleased = DateTime.Now
                 }
             );
         }

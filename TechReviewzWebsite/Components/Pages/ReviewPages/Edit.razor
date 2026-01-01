@@ -22,46 +22,56 @@ else
                 <DataAnnotationsValidator />
                 <ValidationSummary role="alert"/>
                 <input type="hidden" name="Review.Id" value="@Review.Id" />
+
                 <div class="mb-3">
                     <label for="title" class="form-label">Title:</label>
                     <InputText id="title" @bind-Value="Review.Title" class="form-control" />
                     <ValidationMessage For="() => Review.Title" class="text-danger" />
                 </div>
+
                 <div class="mb-3">
                     <label for="content" class="form-label">Content:</label>
                     <InputText id="content" @bind-Value="Review.Content" class="form-control" />
                     <ValidationMessage For="() => Review.Content" class="text-danger" />
                 </div>
+
                 <div class="mb-3">
                     <label for="category" class="form-label">Category:</label>
                     <InputText id="category" @bind-Value="Review.Category" class="form-control" />
                     <ValidationMessage For="() => Review.Category" class="text-danger" />
                 </div>
+
                 <div class="mb-3">
                     <label for="rating" class="form-label">Rating:</label>
                     <InputNumber id="rating" @bind-Value="Review.Rating" class="form-control" />
                     <ValidationMessage For="() => Review.Rating" class="text-danger" />
                 </div>
+
                 <div class="mb-3">
                     <label for="datecreated" class="form-label">DateCreated:</label>
                     <InputDate id="datecreated" @bind-Value="Review.DateCreated" class="form-control" />
                     <ValidationMessage For="() => Review.DateCreated" class="text-danger" />
                 </div>
+
                 <div class="mb-3">
                     <label for="dateupdated" class="form-label">DateUpdated:</label>
                     <InputDate id="dateupdated" @bind-Value="Review.DateUpdated" class="form-control" />
                     <ValidationMessage For="() => Review.DateUpdated" class="text-danger" />
                 </div>
+
+                @* Persist the user id but show the user's display name (read-only) *@
+                <input type="hidden" name="Review.UserId" value="@Review.UserId" />
                 <div class="mb-3">
-                    <label for="userid" class="form-label">UserId:</label>
-                    <InputNumber id="userid" @bind-Value="Review.UserId" class="form-control" />
-                    <ValidationMessage For="() => Review.UserId" class="text-danger" />
+                    <label for="userDisplay" class="form-label">User</label>
+                    <input id="userDisplay" class="form-control" value="@AuthorDisplay" disabled />
                 </div>
+
                 <div class="mb-3">
                     <label for="productid" class="form-label">Product:</label>
                     <InputNumber id="productid" @bind-Value="Review.ProductId" class="form-control" />
                     <ValidationMessage For="() => Review.ProductId" class="text-danger" />
                 </div>
+
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
         </div>
@@ -79,6 +89,8 @@ else
     [SupplyParameterFromForm]
     private Review? Review { get; set; }
 
+    private string AuthorDisplay { get; set; } = "Unknown";
+
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
@@ -87,6 +99,20 @@ else
         if (Review is null)
         {
             NavigationManager.NavigateTo("notfound");
+            return;
+        }
+
+        // load author display name (Identity users are in the DbContext.Users DbSet)
+        if (!string.IsNullOrEmpty(Review.UserId))
+        {
+            var user = await context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == Review.UserId);
+            if (user is not null)
+            {
+                AuthorDisplay = string.IsNullOrWhiteSpace(user.FirstName) && string.IsNullOrWhiteSpace(user.LastName)
+                    ? user.UserName ?? "Unknown"
+                    : $"{user.FirstName} {user.LastName}".Trim();
+            }
         }
     }
 

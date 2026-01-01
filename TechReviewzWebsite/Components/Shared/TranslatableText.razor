@@ -1,0 +1,106 @@
+﻿@rendermode InteractiveServer
+@inject TranslationService TranslationService
+@inject TranslationStateService StateService
+@implements IDisposable
+
+@if (IsTranslating)
+{
+    <span class="text-warning fst-italic" title="Translating...">⏳ @OriginalText</span>
+}
+else if (!string.IsNullOrEmpty(TranslatedText))
+{
+    <span class="text-success" title="Original: @OriginalText">@TranslatedText</span>
+}
+else
+{
+    <span>@OriginalText</span>
+}
+
+<small class="text-muted d-block" style="font-size:0.7em;">
+    [Lang: @(StateService?.CurrentLanguage ?? "none") | 
+     Trans: @(TranslatedText != null ? "YES" : "NO") | 
+     Loading: @IsTranslating]
+</small>
+
+@code {
+    [Parameter, EditorRequired]
+    public string OriginalText { get; set; } = string.Empty;
+
+    private string? TranslatedText { get; set; }
+    private bool IsTranslating { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"[TranslatableText] OnInitializedAsync for '{OriginalText}'");
+        
+        // Subscribe to language changes
+        StateService.OnLanguageChanged += HandleLanguageChanged;
+        
+        // Translate immediately if language is already set
+        await TranslateIfNeeded();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Console.WriteLine($"[TranslatableText] OnAfterRenderAsync (firstRender) for '{OriginalText}'");
+            // Try translating again after first render in case we missed it
+            await TranslateIfNeeded();
+        }
+    }
+
+    private async void HandleLanguageChanged()
+    {
+        Console.WriteLine($"[TranslatableText] HandleLanguageChanged event for '{OriginalText}' - New lang: {StateService.CurrentLanguage}");
+        
+        await InvokeAsync(async () =>
+        {
+            await TranslateIfNeeded();
+            StateHasChanged();
+        });
+    }
+
+    private async Task TranslateIfNeeded()
+    {
+        Console.WriteLine($"[TranslatableText] TranslateIfNeeded called for '{OriginalText}' - Lang: {StateService.CurrentLanguage}");
+        
+        if (string.IsNullOrWhiteSpace(StateService.CurrentLanguage))
+        {
+            Console.WriteLine($"[TranslatableText] No language set - clearing translation");
+            TranslatedText = null;
+            StateHasChanged();
+            return;
+        }
+
+        IsTranslating = true;
+        StateHasChanged();
+        
+        try
+        {
+            Console.WriteLine($"[TranslatableText] Calling TranslateTextAsync for '{OriginalText}' to '{StateService.CurrentLanguage}'");
+            
+            TranslatedText = await TranslationService.TranslateTextAsync(
+                OriginalText, 
+                StateService.CurrentLanguage);
+            
+            Console.WriteLine($"[TranslatableText] Translation result: '{TranslatedText ?? "(null)"}'");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[TranslatableText] ERROR: {ex.Message}");
+            Console.WriteLine($"[TranslatableText] Stack: {ex.StackTrace}");
+        }
+        finally
+        {
+            IsTranslating = false;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        Console.WriteLine($"[TranslatableText] Disposing for '{OriginalText}'");
+        StateService.OnLanguageChanged -= HandleLanguageChanged;
+    }
+}

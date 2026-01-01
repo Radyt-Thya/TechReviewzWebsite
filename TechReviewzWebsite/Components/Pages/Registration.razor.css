@@ -1,6 +1,6 @@
 .background {
     position: absolute;
-    height: 900px;
+    height: 1100px;
     width: 100%;
     top: 60px;
     left: 0;
@@ -16,6 +16,7 @@
     background-color: white;
     padding: 50px;
     box-sizing: border-box;
+    box-shadow: 0 15px 27px rgba(0,0,0,.15);
 }
 
 .heading {

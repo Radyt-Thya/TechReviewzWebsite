@@ -1,6 +1,6 @@
 ﻿.background {
     position: absolute;
-    height: 915px;
+    height: 855px;
     width: 100%;
     top: 60px;
     left: 0;
@@ -9,22 +9,10 @@
 
 .panel1 {
     position: absolute;
-    height: 75%;
-    width: 65%;
-    top: 135px;
-    left: 500px;
-    background-color: white;
-    padding: 50px;
-    box-sizing: border-box;
-    box-shadow: 0 15px 27px rgba(0,0,0,.15);
-}
-
-.panel2 {
-    position: absolute;
-    height: 280px;
-    width: 275px;
-    top: 135px;
-    left: 150px;
+    height: 85%;
+    width: 90%;
+    top: 60px;
+    left: 100px;
     background-color: white;
     padding: 50px;
     box-sizing: border-box;

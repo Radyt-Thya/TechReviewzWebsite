@@ -1,5 +1,123 @@
-﻿<h3>ProductComparison</h3>
+﻿@page "/products/compare"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using System.Text.Json
+@using TechReviewzWebsite.Domain
+@inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrator, User")]
+
+<PageTitle>Compare Products</PageTitle>
+
+@if (LeftProduct is null || RightProduct is null)
+{
+    <div class="alert alert-info">Select two products to compare. <a href="/products">Back to products</a></div>
+}
+else
+{
+    <div class="row mb-3">
+        <div class="col">
+            <h4><b>Compare Products</b></h4>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th class="text-center">@LeftProduct.Name</th>
+                    <th class="text-center">@RightProduct.Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>Price</th>
+                    <td class="text-center">@LeftProduct.Price.ToString("C")</td>
+                    <td class="text-center">@RightProduct.Price.ToString("C")</td>
+                </tr>
+                <tr>
+                    <th>Brand</th>
+                    <td class="text-center">@LeftProduct.Brand</td>
+                    <td class="text-center">@RightProduct.Brand</td>
+                </tr>
+                <tr>
+                    <th>Specifications</th>
+                    <td class="text-center">@FormatSpecifications(LeftProduct.Specification)</td>
+                    <td class="text-center">@FormatSpecifications(RightProduct.Specification)</td>
+                </tr>
+                <tr>
+                    <th>Category</th>
+                    <td class="text-center">@LeftProduct.Category</td>
+                    <td class="text-center">@RightProduct.Category</td>
+                </tr>
+                <tr>
+                    <th>Description</th>
+                    <td>@LeftProduct.Description</td>
+                    <td>@RightProduct.Description</td>
+                </tr>
+                <tr>
+                    <th>Date Released</th>
+                    <td>@LeftProduct.DateReleased.ToShortDateString()</td>
+                    <td>@RightProduct.DateReleased.ToShortDateString()</td>
+                </tr>
+                <tr>
+                    <th>Date Updated</th>
+                    <td>@LeftProduct.DateUpdated.ToShortDateString()</td>
+                    <td>@RightProduct.DateUpdated.ToShortDateString()</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="row mb-3col text-end">
+        <button class="btn btn-primary" @onclick="NavigateToProducts">Back</button>
+    </div>
+}
 
 @code {
+    [SupplyParameterFromQuery(Name = "left")]
+    public int? LeftId { get; set; }
 
+    [SupplyParameterFromQuery(Name = "right")]
+    public int? RightId { get; set; }
+
+    private Product? LeftProduct;
+    private Product? RightProduct;
+
+    private void NavigateToProducts() => NavigationManager.NavigateTo("/products");
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (LeftId is null || RightId is null)
+        {
+            LeftProduct = RightProduct = null;
+            return;
+        }
+
+        await using var ctx = DbFactory.CreateDbContext();
+        LeftProduct = await ctx.Product.AsNoTracking().FirstOrDefaultAsync(p => p.Id == LeftId);
+        RightProduct = await ctx.Product.AsNoTracking().FirstOrDefaultAsync(p => p.Id == RightId);
+    }
+
+    private string FormatSpecifications(string specJson)
+    {
+        if (string.IsNullOrWhiteSpace(specJson))
+            return "N/A";
+
+        try
+        {
+            // Try to deserialize as JSON array
+            var specs = JsonSerializer.Deserialize<string[]>(specJson);
+            return specs is null || specs.Length == 0 
+                ? "N/A" 
+                : string.Join(", ", specs);
+        }
+        catch
+        {
+            // If not JSON, return as-is (fallback for legacy data)
+            return specJson;
+        }
+    }
 }

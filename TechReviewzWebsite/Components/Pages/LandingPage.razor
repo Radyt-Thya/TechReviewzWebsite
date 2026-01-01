@@ -1,4 +1,5 @@
 ﻿@page "/LandingPage"
+@using TechReviewzWebsite.Components.Account.Shared
 @rendermode InteractiveServer
 
 <div>
@@ -26,17 +27,23 @@
     </div>
 
     <div>
+        @* show status messages for the newsletter subscription *@
+        <StatusMessage Message="@NewsletterStatus" />
+
         <div class="panel4_1">
             <div class="panel4_1_txt">
                 <h1><b>Subscribe to our Newsletter!</b></h1>
 
                 <div class="spacing">
                     <label for="email">Email</label>
-                    <input id="email" class="form-control" type="email" placeholder="you@example.com" />
+                    <input id="email" class="form-control" type="email" placeholder="you@example.com" @bind="NewsletterEmail" />
                 </div>
 
                 <div class="spacing">
-                    <button class="btn btn-primary">Sign up</button>
+                    <button class="btn btn-primary" @onclick="SubscribeAsync" disabled="@IsSubmitting">
+                        @(IsSubmitting ? "Signing up…" : "Sign up")
+                    </button>
+                    @* <ValidationMessage class="text-danger" /> *@
                 </div>
             </div>
         </div>
@@ -71,5 +78,47 @@
         </div>
     </div>
 </div>
+
+@code {
+    private string? NewsletterEmail;
+    private string? NewsletterStatus;
+    private bool IsSubmitting;
+
+    // Minimal client-side feedback. Replace the simulated call with your real subscribe API call.
+    private async Task SubscribeAsync()
+    {
+        NewsletterStatus = null;
+        if (string.IsNullOrWhiteSpace(NewsletterEmail))
+        {
+            NewsletterStatus = "Error: Please enter a valid email.";
+            return;
+        }
+
+        try
+        {
+            IsSubmitting = true;
+
+            // TODO: call your API or service to persist the subscription and send confirmation email.
+            // Example (uncomment and adapt if you have an API):
+            // var resp = await Http.PostAsJsonAsync("/api/newsletter/subscribe", new { Email = NewsletterEmail });
+            // if (!resp.IsSuccessStatusCode) throw new Exception("Subscription failed");
+
+            // simulate async work
+            await Task.Delay(300);
+
+            NewsletterStatus = "Confirmation email sent. Please check your inbox.";
+            NewsletterEmail = null; // clear input on success
+        }
+        catch (Exception ex)
+        {
+            NewsletterStatus = "Error: Subscription failed. Try again later.";
+            Console.Error.WriteLine(ex);
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+}
 
 

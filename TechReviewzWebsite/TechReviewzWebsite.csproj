@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <Folder Include="Models\" />
+    <Folder Include="wwwroot\product-images\" />
   </ItemGroup>
 
 </Project>

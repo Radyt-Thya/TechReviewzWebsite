@@ -3,73 +3,112 @@
 @using TechReviewzWebsite.Domain
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
 @inject NavigationManager NavigationManager
+@rendermode InteractiveServer
 
 <PageTitle>Create</PageTitle>
 
-<h1>Create</h1>
+<div class="background">
+    <div class="heading">
+        <h1><b>Create Product</b></h1>
+    </div>
+    <div class="panel1">
+        <h2>Product</h2>
+        <hr />
+        <div class="row">
+            <div class="col-md-4">
+                <EditForm Model="Product" OnValidSubmit="AddProduct" FormName="create">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger" role="alert" />
 
-<h2>Product</h2>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <EditForm method="post" Model="Product" OnValidSubmit="AddProduct" FormName="create" Enhance>
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert"/>
-            <div class="mb-3">
-                <label for="name" class="form-label">Name:</label> 
-                <InputText id="name" @bind-Value="Product.Name" class="form-control" /> 
-                <ValidationMessage For="() => Product.Name" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="description" class="form-label">Description:</label> 
-                <InputText id="description" @bind-Value="Product.Description" class="form-control" /> 
-                <ValidationMessage For="() => Product.Description" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="category" class="form-label">Category:</label>
-                <InputSelect id="category" @bind-Value="Product.Category" class="form-select">
-                    <option value="">-- Select Category --</option>
-                    @foreach (var c in Categories)
-                    {
-                        <option value="@c">@c</option>
-                    }
-                </InputSelect>
-                <ValidationMessage For="() => Product.Category" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="brand" class="form-label">Brand:</label> 
-                <InputText id="brand" @bind-Value="Product.Brand" class="form-control" /> 
-                <ValidationMessage For="() => Product.Brand" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="price" class="form-label">Price:</label> 
-                <InputNumber id="price" @bind-Value="Product.Price" class="form-control" /> 
-                <ValidationMessage For="() => Product.Price" class="text-danger" /> 
-            </div>        
-            <div class="mb-3" hidden>
-                <label for="datecreated" class="form-label">DateCreated:</label> 
-                <InputDate id="datecreated" @bind-Value="Product.DateCreated" class="form-control" />
-                <ValidationMessage For="() => Product.DateCreated" class="text-danger" /> 
-            </div>
-            <div class="mb-3" hidden>
-                <label for="dateppdated" class="form-label">DateUpdated:</label>
-                <InputDate id="dateppdated" @bind-Value="Product.DateUpdated" class="form-control" />
-                <ValidationMessage For="() => Product.DateUpdated" class="text-danger" />
-            </div>
-            <div class="mb-3">
-                <label for="imageurl" class="form-label">ImageUrl:</label> 
-                <InputText id="imageurl" @bind-Value="Product.ImageUrl" class="form-control" /> 
-                <ValidationMessage For="() => Product.ImageUrl" class="text-danger" /> 
-            </div>        
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name:</label>
+                        <InputText id="name" @bind-Value="Product.Name" class="form-control" />
+                        <ValidationMessage For="() => Product.Name" class="text-danger" />
+                    </div>
 
-            <button type="submit" class="btn btn-primary">Create</button>
-        </EditForm>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description:</label>
+                        <InputText id="description" @bind-Value="Product.Description" class="form-control" />
+                        <ValidationMessage For="() => Product.Description" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category:</label>
+                        <InputSelect id="category" @bind-Value="Product.Category" class="form-select">
+                            <option value="">-- Select Category --</option>
+                            @foreach (var c in Categories)
+                            {
+                                <option value="@c">@c</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => Product.Category" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="brand" class="form-label">Brand:</label>
+                        <InputText id="brand" @bind-Value="Product.Brand" class="form-control" />
+                        <ValidationMessage For="() => Product.Brand" class="text-danger" />
+                    </div>
+
+                    @* Inline specification input-list (replaces InputList) *@
+                    <div class="mb-3">
+                        <label class="form-label">Specifications</label>
+                        <div class="d-flex gap-2">
+                            <InputText id="newSpec" @bind-Value="newSpec" class="form-control" placeholder="Add a specification (e.g. 8GB RAM)" />
+                            <button type="button" class="btn btn-outline-primary" @onclick="AddSpec">Add</button>
+                        </div>
+
+                        <div class="mt-2">
+                            @if (Specs.Count == 0)
+                            {
+                                <div class="text-muted small">No specifications added.</div>
+                            }
+                            else
+                            {
+                                <div class="d-flex flex-wrap gap-2">
+                                    @for (int i = 0; i < Specs.Count; i++)
+                                    {
+                                        <div class="badge bg-light border text-dark d-flex align-items-center" style="padding:6px;">
+                                            <span>@Specs[i]</span>
+                                            <button type="button" class="btn-close btn-close-small ms-2" aria-label="Remove" @onclick="() => RemoveSpec(i)"></button>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <ValidationMessage For="() => Product.Specification" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Price:</label>
+                        <InputNumber id="price" @bind-Value="Product.Price" class="form-control" />
+                        <ValidationMessage For="() => Product.Price" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="datereleased" class="form-label">Date Released:</label>
+                        <InputDate id="datereleased" @bind-Value="Product.DateReleased" class="form-control" />
+                        <ValidationMessage For="() => Product.DateReleased" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3" hidden>
+                        <label for="dateppdated" class="form-label">DateUpdated:</label>
+                        <InputDate id="dateppdated" @bind-Value="Product.DateUpdated" class="form-control" />
+                        <ValidationMessage For="() => Product.DateUpdated" class="text-danger" />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </EditForm>
+            </div>
+        </div>
+
+        <div>
+            <a href="/products">Back to List</a>
+        </div>
     </div>
 </div>
-
-<div>
-    <a href="/products">Back to List</a>
-</div>
+<h1><b>Create</b></h1>
 
 @code {
     [SupplyParameterFromForm]
@@ -86,19 +125,47 @@
         "Home Appliances"
     };
 
+    private List<string> Specs { get; set; } = new();
+    private string? newSpec;
+
+    // Make AddSpec async and call StateHasChanged to force UI update if needed.
+    private async Task AddSpec()
+    {
+        if (string.IsNullOrWhiteSpace(newSpec)) return;
+        var item = newSpec.Trim();
+        if (!Specs.Contains(item, StringComparer.OrdinalIgnoreCase))
+        {
+            Specs.Add(item);
+            // clear input and update UI
+            newSpec = string.Empty;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task RemoveSpec(int index)
+    {
+        if (index >= 0 && index < Specs.Count)
+        {
+            Specs.RemoveAt(index);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddProduct()
     {
         using var context = DbFactory.CreateDbContext();
 
-        //Set the DateCreated and DateUpdated fields to the current date and time.
-        Product.DateCreated = DateTime.Now;
+        // persist Specs into Product.Specification as JSON
+        Product.Specification = Specs.Count == 0 ? null : System.Text.Json.JsonSerializer.Serialize(Specs);
+
+        // Set the DateCreated and DateUpdated fields to the current date and time.
+        Product.DateReleased = DateTime.Now;
         Product.DateUpdated = DateTime.Now;
 
         context.Product.Add(Product);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/products");
     }
-
-
 }
+

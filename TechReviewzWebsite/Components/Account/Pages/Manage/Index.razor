@@ -25,44 +25,72 @@
         <EditForm Model="Input" FormName="changeprofiledetails" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <input type="text" value="@username" class="form-control" placeholder="Please choose your username." disabled />
-                <label for="username" class="form-label">Username</label>
-            </div>
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Gender" class="form-control" placeholder="Choose a gender." />
-                <label for="gender" class="form-label">Gender</label>
-                <ValidationMessage For="() => Input.Gender" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
-                <label for="phone-number" class="form-label">Phone number</label>
-                <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
-            </div>
-            @if (isEmailConfirmed)
-            {
-                <div class="form-floating mb-3 input-group">
-                    <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
-                    <div class="input-group-append">
-                        <span class="h-100 input-group-text text-success font-weight-bold">?</span>
+            <div style ="display: flex;">
+                <label>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="200px" viewBox="0 -960 960 960" width="200px" fill="#e3e3e3"><path d="M234-276q51-39 114-61.5T480-360q69 0 132 22.5T726-276q35-41 54.5-93T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 59 19.5 111t54.5 93Zm246-164q-59 0-99.5-40.5T340-580q0-59 40.5-99.5T480-720q59 0 99.5 40.5T620-580q0 59-40.5 99.5T480-440Zm0 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q53 0 100-15.5t86-44.5q-39-29-86-44.5T480-280q-53 0-100 15.5T294-220q39 29 86 44.5T480-160Zm0-360q26 0 43-17t17-43q0-26-17-43t-43-17q-26 0-43 17t-17 43q0 26 17 43t43 17Zm0-60Zm0 360Z" /></svg>
+                </label>
+                <div style="flex-direction: column; padding: 20px">
+                    <div style="display: flex; gap: 30px;">
+                        <div class="form-floating mb-3" style="flex:1;">
+                            <InputText @bind-Value="Input.FirstName" class="form-control" placeholder="First Name" style="min-width:360px; width:100%;" />
+                            <label for="firstname" class="form-label">First Name</label>
+                            <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+                        </div>
+                        <div class="form-floating mb-3" style="flex:1;">
+                            <InputText @bind-Value="Input.LastName" class="form-control" placeholder="Last Name" style="min-width:360px; width:100%;" />
+                            <label for="lastname" class="form-label">Last Name</label>
+                            <ValidationMessage For="() => Input.LastName" class="text-danger" />
+                        </div>
                     </div>
-                    <label for="email" class="form-label">Email</label>
+                    <div style="display: flex; gap: 30px;">
+                        <div class="form-floating mb-3" flex:1;>
+                            <input type="text" value="@username" class="form-control" placeholder="Please choose your username." style="min-width:360px; width:100%;" disabled />
+                            <label for="username" class="form-label">Username</label>
+                        </div>
+                        <div class="form-floating mb-3" flex:1;>
+                            <InputSelect @bind-Value="Input.Gender" class="form-select" style="min-width:360px; width:100%;">
+                                <option value="">-- Select Gender --</option>
+                                @foreach (var g in Gender)
+                                {
+                                    <option value="@g">@g</option>
+                                }
+                            </InputSelect>
+                            <label for="gender" class="form-label">Gender</label>
+                            <ValidationMessage For="() => Input.Gender" class="text-danger" />
+                        </div>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number." style="min-width:360px; width:100%;" />
+                        <label for="phone-number" class="form-label">Phone number</label>
+                        <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
+                    </div>
+                    @if (isEmailConfirmed)
+                    {
+                        <div class="form-floating mb-3 input-group">
+                            <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
+                            <div class="input-group-append">
+                                <span class="h-100 input-group-text text-success font-weight-bold">?</span>
+                            </div>
+                            <label for="email" class="form-label">Email</label>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-floating mb-3">
+                            <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
+                            <label for="email" class="form-label">Email</label>
+                            <button type="submit" class="btn btn-link" form="send-verification-form">Send verification email</button>
+                        </div>
+                    }
+                    <div class="form-floating mb-3">
+                        <InputText @bind-Value="Input.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="Please enter new email." />
+                        <label for="new-email" class="form-label">New email</label>
+                        <ValidationMessage For="() => Input.NewEmail" class="text-danger" />
+                    </div>
+                    <button type="submit" class="w-100 btn btn-lg btn-primary">Save details</button>
                 </div>
-            }
-            else
-            {
-                <div class="form-floating mb-3">
-                    <input type="text" value="@email" class="form-control" placeholder="Please enter your email." disabled />
-                    <label for="email" class="form-label">Email</label>
-                    <button type="submit" class="btn btn-link" form="send-verification-form">Send verification email</button>
-                </div>
-            }
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="Please enter new email." />
-                <label for="new-email" class="form-label">New email</label>
-                <ValidationMessage For="() => Input.NewEmail" class="text-danger" />
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Save details</button>
+           
         </EditForm>
     </div>
 </div>
@@ -70,6 +98,8 @@
 @code {
     private string? message;
     private TechReviewzWebsiteUser user = default!;
+    private string? firstname;
+    private string? lastname;
     private string? username;
     private string? gender;
     private string? phoneNumber;
@@ -82,15 +112,27 @@
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = new();
 
+    private readonly List<string> Gender = new()
+    {
+        "Male",
+        "Female",
+        "Others",
+    };
+
     protected override async Task OnInitializedAsync()
     {
         user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        firstname = user.FirstName; // FIX: Directly access the Gender property
+        lastname = user.LastName; // FIX: Directly access the Gender property
         username = await UserManager.GetUserNameAsync(user);
         gender = user.Gender; // FIX: Directly access the Gender property
         phoneNumber = await UserManager.GetPhoneNumberAsync(user);
         email = await UserManager.GetEmailAsync(user);
         isEmailConfirmed = await UserManager.IsEmailConfirmedAsync(user);
 
+        Input.FirstName ??= firstname; // Optionally prefill Gender in the form
+        Input.LastName ??= lastname; // Optionally prefill Gender in the form
+        Input.Gender ??= gender; // Optionally prefill Gender in the form
         Input.PhoneNumber ??= phoneNumber;
         Input.Gender ??= gender; // Optionally prefill Gender in the form
         Input.NewEmail ??= email;
@@ -128,6 +170,20 @@
         }
 
         // Optionally update Gender if changed
+        if (Input.FirstName != firstname)
+        {
+            user.FirstName = Input.FirstName;
+            await UserManager.UpdateAsync(user);
+        }
+
+        // Optionally update Gender if changed
+        if (Input.LastName != lastname)
+        {
+            user.LastName = Input.LastName;
+            await UserManager.UpdateAsync(user);
+        }
+
+        // Optionally update Gender if changed
         if (Input.Gender != gender)
         {
             user.Gender = Input.Gender;
@@ -160,6 +216,11 @@
 
     private sealed class InputModel
     {
+        [Display(Name = "First Name")]
+        public string? FirstName { get; set; }
+        [Display(Name = "Last Name")]
+        public string? LastName { get; set; }
+
         [Display(Name = "Gender")]
         public string? Gender { get; set; }
 

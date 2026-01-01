@@ -1,9 +1,83 @@
 ﻿@page "/reviews/create"
 @using Microsoft.EntityFrameworkCore
+@using TechReviewzWebsite.Components.Account
 @using TechReviewzWebsite.Data
 @using TechReviewzWebsite.Domain
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject IdentityUserAccessor UserAccessor
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private Review Review { get; set; } = new();
+
+    private readonly List<string> Categories = new()
+    {
+        "Laptops",
+        "Smartphones & Tablets",
+        "Personal Computer (PC)",
+        "PC Components",
+        "Peripherals",
+        "Wearables",
+        "Home Appliances"
+    };
+
+    private readonly List<string> Rating = new()
+    {
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+    };
+
+    private IList<Product>? Products;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Products = await context.Product.ToListAsync();
+
+        // Ensure Review.UserId is set to the domain user (int) that maps to the current identity user
+        var identityUser = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        if (identityUser is not null)
+        {
+            // Use the actual TechReviewzWebsiteUser type (from TechReviewzWebsite.Data)
+            var domainUser = await context.Users
+                .FirstOrDefaultAsync(u => u.UserName == identityUser.UserName || u.Email == identityUser.Email);
+
+            if (domainUser is null)
+            {
+                domainUser = new TechReviewzWebsiteUser
+                {
+                    UserName = identityUser.UserName,
+                    Email = identityUser.Email
+                };
+                context.Users.Add(domainUser);
+                await context.SaveChangesAsync();
+            }
+
+            Review.UserId = domainUser.Id; // assign int FK
+        }
+    }
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddReview()
+    {
+        using var context = DbFactory.CreateDbContext();
+
+        //Set the DateCreated and DateUpdated fields to the current date and time.
+        Review.DateCreated = DateTime.Now;
+        Review.DateUpdated = DateTime.Now;
+
+        context.Review.Add(Review);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/reviews");
+    }
+}
 
 <PageTitle>Create</PageTitle>
 
@@ -61,11 +135,8 @@
                 <InputDate id="dateupdated" @bind-Value="Review.DateUpdated" class="form-control" /> 
                 <ValidationMessage For="() => Review.DateUpdated" class="text-danger" /> 
             </div>        
-            <div class="mb-3">
-                    <label for="userid" class="form-label">User:</label>
-                    <InputNumber id="userid" @bind-Value="Review.UserId" class="form-control" />
-                    <ValidationMessage For="() => Review.UserId" class="text-danger" />
-            </div>
+
+            @* Product selector *@
             <div class="mb-3">
                 <label for="productid" class="form-label">Product:</label>
                 <InputSelect id="productid" @bind-Value="Review.ProductId" class="form-control">
@@ -89,51 +160,3 @@
 <div>
     <a href="/reviews">Back to List</a>
 </div>
-
-@code {
-    [SupplyParameterFromForm]
-    private Review Review { get; set; } = new();
-
-    private readonly List<string> Categories = new()
-    {
-        "Laptops",
-        "Smartphones & Tablets",
-        "Personal Computer (PC)",
-        "PC Components",
-        "Peripherals",
-        "Wearables",
-        "Home Appliances"
-    };
-
-    private readonly List<string> Rating = new()
-    {
-        "1",
-        "2",
-        "3",
-        "4",
-        "5"
-    };
-
-    private IList<Product>? Products;
-    private IList<TechReviewzWebsiteUser>? Users;
-
-    protected override async Task OnInitializedAsync()
-    {
-        using var context = DbFactory.CreateDbContext();
-        Products = await context.Product.ToListAsync();
-    }
-
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
-    private async Task AddReview()
-    {
-        using var context = DbFactory.CreateDbContext();
-
-        //Set the DateCreated and DateUpdated fields to the current date and time.
-        Review.DateCreated = DateTime.Now;
-        Review.DateUpdated = DateTime.Now;
-
-        context.Review.Add(Review);
-        await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/reviews");
-    }
-}

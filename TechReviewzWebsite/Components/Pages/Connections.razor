@@ -1,0 +1,422 @@
+﻿@page "/connections"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.EntityFrameworkCore
+@using System.Linq
+@using System.Security.Claims
+@using TechReviewzWebsite.Data
+@using TechReviewzWebsite.Domain
+@inject IDbContextFactory<TechReviewzWebsiteContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@implements IDisposable
+@rendermode InteractiveServer
+
+<PageTitle>Connections</PageTitle>
+
+<div class="background">
+    <div class="panel1">
+        <h1><b>Account</b></h1>
+        <hr />
+        <div class="profile">
+            <label>
+                <svg xmlns="http://www.w3.org/2000/svg" height="200px" viewBox="0 -960 960 960" width="200px" fill="#e3e3e3"><path d="M234-276q51-39 114-61.5T480-360q69 0 132 22.5T726-276q35-41 54.5-93T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 59 19.5 111t54.5 93Zm246-164q-59 0-99.5-40.5T340-580q0-59 40.5-99.5T480-720q59 0 99.5 40.5T620-580q0 59-40.5 99.5T480-440Zm0 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q53 0 100-15.5t86-44.5q-39-29-86-44.5T480-280q-53 0-100 15.5T294-220q39 29 86 44.5T480-160Zm0-360q26 0 43-17t17-43q0-26-17-43t-43-17q-26 0-43 17t-17 43q0 26 17 43t43 17Zm0-60Zm0 360Z" /></svg>
+            </label>
+            <div class="profile_details">
+                @if (currentUserName is null)
+                {
+                    <h3><b>Loading...</b></h3>
+                    <h5>Email: —</h5>
+                }
+                else
+                {
+                    <h3><b>@currentUserDisplay</b></h3>
+                    <h5>Email: @currentUserEmail</h5>
+                }
+            </div>
+            
+        </div>
+        <h1><b>Connections</b></h1>
+        <hr />
+
+        @if (!string.IsNullOrEmpty(StatusMessage))
+        {
+            <div class="alert alert-info">@StatusMessage</div>
+        }
+
+        @* Followers section: shows people who follow the current user *@
+        @if (currentUserName is null)
+        {
+            <p><em>Loading followers...</em></p>
+        }
+        else
+        {
+            <div class="mb-3">
+                <h3>Followers (@FollowerCount)</h3>
+                <hr />
+            </div>
+
+            var followerUsers = users
+                .Where(u => !string.IsNullOrEmpty(u.UserName) && IsFollower(u.UserName))
+                .ToList();
+
+            if (!followerUsers.Any())
+            {
+                <div class="text-muted">No one is following you yet.</div>
+            }
+            else
+            {
+                <div class="list-group mb-4">
+                    @foreach (var u in followerUsers)
+                    {
+                        <div class="list-group-item d-flex justify-content-between align-items-center" id="follower-@u.UserName">
+                            <div>
+                                @if (u.FirstName == null)
+                                {
+                                    <strong>Generic User</strong>
+                                    <div class="small">@($"{u.UserName}")</div>
+                                }
+                                <strong>@u.FirstName @u.LastName</strong>
+                                @if (!string.IsNullOrEmpty(u.FirstName) || !string.IsNullOrEmpty(u.LastName))
+                                {
+                                    <div class="small">@($"{u.UserName}")</div>
+                                }
+                            </div>
+
+                            <div class="btn-group">
+                                @if (!IsFollowing(u.UserName))
+                                {
+                                    <button class="btn btn-outline-primary" @onclick="() => FollowUser(u.UserName)">Follow back</button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-outline-secondary" disabled>Following</button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        @* Following count shown at the top (how many people the current user is following) *@
+        @if (currentUserName is null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else
+        {
+            <div class="mb-3">
+                <h3>Following (@FollowingCount)</h3>
+                <hr />
+            </div>
+        }
+
+        @if (currentUserName is null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else
+        {
+            var followingUsers = users.Where(u => !string.IsNullOrEmpty(u.UserName) && IsFollowing(u.UserName)).ToList();
+            if (!followingUsers.Any())
+            {
+                <div class="text-muted">You are not following anyone yet.</div>
+            }
+            else
+            {
+                <div class="list-group mb-4">
+                    @foreach (var u in followingUsers)
+                    {
+                        <div class="list-group-item d-flex justify-content-between align-items-center" id="following-@u.UserName">
+                            <div>
+                                @if (u.FirstName == null)
+                                {
+                                    <strong>Generic User</strong>
+                                    <div class="small">@($"{u.UserName}")</div>
+                                }
+                                <strong>@u.FirstName @u.LastName</strong>
+                                @if (!string.IsNullOrEmpty(u.FirstName) || !string.IsNullOrEmpty(u.LastName))
+                                {
+                                    <div class="small">@($"{u.UserName}")</div>
+                                }
+                            </div>
+
+                            <div class="btn-group">
+                                <button class="btn btn-outline-danger" @onclick="() => UnfollowUser(u.UserName)">Unfollow</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        <h3>Connect with other People</h3>
+        <hr />
+        @if (currentUserName is null)
+        {
+            <!-- nothing to show -->
+        }
+        else
+        {
+            @* compute filtered list first *@
+            var otherUsers = users
+                .Where(u => !string.IsNullOrEmpty(u.UserName) && u.UserName != currentUserName && !IsFollowing(u.UserName))
+                .OrderBy(u => u.UserName)
+                .ToList();
+
+            @if (!otherUsers.Any())
+            {
+                <div class="text-muted">No more people to follow.</div>
+            }
+            else
+            {
+                @* paged subset *@
+                var paged = otherUsers
+                    .Skip((paginationState.CurrentPage - 1) * paginationState.ItemsPerPage)
+                    .Take(paginationState.ItemsPerPage)
+                    .ToList();
+
+                <div class="list-group">
+                    @foreach (var u in paged)
+                    {
+                        <div class="list-group-item d-flex justify-content-between align-items-center" id="user-@u.UserName">
+                            <div>
+                                @if (u.FirstName == null)
+                                {
+                                    <strong>Generic User</strong>
+                                    <div class="small">@($"{u.UserName}")</div>
+                                }
+                                <strong>@u.FirstName @u.LastName</strong>
+                                @if (!string.IsNullOrEmpty(u.FirstName) || !string.IsNullOrEmpty(u.LastName))
+                                {
+                                    <div class="small">@($"{u.UserName}")</div>
+                                }
+                            </div>
+
+                            <div class="btn-group">
+                                <button class="btn btn-outline-primary" @onclick="() => FollowUser(u.UserName)">Follow</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @* pager controls *@
+                <nav class="mt-3" aria-label="Other users pagination">
+                    <ul class="pagination">
+                        <li class="page-item @(paginationState.CanPrevious ? "" : "disabled")">
+                            <button class="page-link" @onclick="PreviousPage">Previous</button>
+                        </li>
+
+                        @for (int p = 1; p <= paginationState.TotalPages(otherUsers.Count); p++)
+                        {
+                            <li class="page-item @(paginationState.CurrentPage == p ? "active" : "")">
+                                <button class="page-link" @onclick="() => GoToPage(p)">@p</button>
+                            </li>
+                        }
+
+                        <li class="page-item @(paginationState.CanNext(otherUsers.Count) ? "" : "disabled")">
+                            <button class="page-link" @onclick="NextPage">Next</button>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    // pagination helper stored in the component (no extra files)
+    private PaginationState paginationState = new PaginationState { ItemsPerPage = 6, CurrentPage = 1 };
+
+    private string? currentUserName;
+    private string? currentUserEmail;
+    private string? currentUserDisplay;
+    private IList<TechReviewzWebsiteUser> users = Array.Empty<TechReviewzWebsiteUser>();
+    private IList<Connection> connections = Array.Empty<Connection>();
+    private string? StatusMessage;
+
+    // computed count of people the current user is following
+    private int FollowingCount => connections.Count(c =>
+        c.Username == currentUserName &&
+        c.Relation == "Follow" &&
+        c.Status == "Accepted");
+
+    // computed follower count for the current user
+    private int FollowerCount => connections.Count(c =>
+        c.TargetUsername == currentUserName &&
+        c.Relation == "Follow" &&
+        c.Status == "Accepted");
+
+    protected override async Task OnInitializedAsync()
+    {
+        // subscribe to location changes to reload data when the app navigates here
+        NavigationManager.LocationChanged += OnLocationChanged;
+        await LoadDataAsync();
+    }
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        // when the user navigates to /connections reload data
+        try
+        {
+            var uri = new Uri(e.Location);
+            if (uri.AbsolutePath.Equals("/connections", StringComparison.OrdinalIgnoreCase))
+            {
+                await InvokeAsync(async () =>
+                {
+                    await LoadDataAsync();
+                    StateHasChanged();
+                });
+            }
+        }
+        catch
+        {
+            // ignore URI parse errors
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+
+        // Get current user from AuthenticationState instead of HttpContext
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            currentUserName = user.Identity.Name;
+            currentUserEmail = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            // Load the full user record to get FirstName/LastName
+            var currentUser = await context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserName == currentUserName);
+
+            currentUserDisplay = !string.IsNullOrWhiteSpace(currentUser?.FirstName) || !string.IsNullOrWhiteSpace(currentUser?.LastName)
+                ? $"{currentUser?.FirstName} {currentUser?.LastName}".Trim()
+                : currentUserName;
+        }
+
+        users = await context.Users.AsNoTracking().ToListAsync();
+        connections = await context.Connection.AsNoTracking().ToListAsync();
+
+        // reset paging when data changes
+        paginationState.CurrentPage = 1;
+    }
+
+    private bool IsFollowing(string targetUsername)
+        => connections.Any(c =>
+            c.Username == currentUserName &&
+            c.TargetUsername == targetUsername &&
+            c.Relation == "Follow" &&
+            c.Status == "Accepted");
+
+    // true when the given username follows the current user
+    private bool IsFollower(string potentialFollowerUsername)
+        => connections.Any(c =>
+            c.Username == potentialFollowerUsername &&
+            c.TargetUsername == currentUserName &&
+            c.Relation == "Follow" &&
+            c.Status == "Accepted");
+
+    // pager actions
+    private void PreviousPage()
+    {
+        if (paginationState.CurrentPage > 1)
+        {
+            paginationState.CurrentPage--;
+        }
+    }
+
+    private void NextPage()
+    {
+        paginationState.CurrentPage++;
+    }
+
+    private void GoToPage(int page)
+    {
+        paginationState.CurrentPage = page;
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
+    private async Task FollowUser(string targetUsername)
+    {
+        if (string.IsNullOrEmpty(currentUserName) || string.IsNullOrEmpty(targetUsername))
+            return;
+
+        using var context = DbFactory.CreateDbContext();
+        
+        // Check if connection already exists
+        var existing = await context.Connection
+            .FirstOrDefaultAsync(c => 
+                c.Username == currentUserName && 
+                c.TargetUsername == targetUsername);
+
+        if (existing == null)
+        {
+            // Create new follow connection
+            var connection = new Connection
+            {
+                Username = currentUserName,
+                TargetUsername = targetUsername,
+                Relation = "Follow",
+                Status = "Accepted"
+            };
+
+            context.Connection.Add(connection);
+            await context.SaveChangesAsync();
+
+            // Reload data to update UI
+            await LoadDataAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task UnfollowUser(string targetUsername)
+    {
+        if (string.IsNullOrEmpty(currentUserName) || string.IsNullOrEmpty(targetUsername))
+            return;
+
+        using var context = DbFactory.CreateDbContext();
+        
+        // Find and remove the connection
+        var connection = await context.Connection
+            .FirstOrDefaultAsync(c => 
+                c.Username == currentUserName && 
+                c.TargetUsername == targetUsername &&
+                c.Relation == "Follow");
+
+        if (connection != null)
+        {
+            context.Connection.Remove(connection);
+            await context.SaveChangesAsync();
+
+            // Reload data to update UI
+            await LoadDataAsync();
+            StateHasChanged();
+        }
+    }
+
+    // small in-file pagination helper (no new file required)
+    private class PaginationState
+    {
+        public int ItemsPerPage { get; set; } = 10;
+        public int CurrentPage { get; set; } = 1;
+
+        public int TotalPages(int totalItems)
+        {
+            if (ItemsPerPage <= 0) return 1;
+            return Math.Max(1, (int)Math.Ceiling(totalItems / (double)ItemsPerPage));
+        }
+
+        public bool CanPrevious => CurrentPage > 1;
+
+        public bool CanNext(int totalItems) => CurrentPage < TotalPages(totalItems);
+    }
+}

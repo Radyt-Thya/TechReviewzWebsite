@@ -1,27 +1,30 @@
 ﻿@page "/reviews"
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
-@using TechReviewzWebsite.Domain
 @using TechReviewzWebsite.Data
+@using TechReviewzWebsite.Domain
 @implements IAsyncDisposable
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
 
 <PageTitle>Index</PageTitle>
 
-<h1>Index</h1>
+<h1><b>Product Reviews</b></h1>
 
 <p>
     <a href="reviews/create">Create New</a>
 </p>
 
-<QuickGrid Class="table" Items="context.Review">
+<QuickGrid TItem="Review" Class="table" Items="Reviews.AsQueryable()">
     <PropertyColumn Property="review => review.Title" />
     <PropertyColumn Property="review => review.Content" />
     <PropertyColumn Property="review => review.Category" />
     <PropertyColumn Property="review => review.Rating" />
     <PropertyColumn Property="review => review.DateCreated" />
     <PropertyColumn Property="review => review.DateUpdated" />
-    <PropertyColumn Property="review => review.UserId" />
+    @* User column with header "User" using TemplateColumn Title property *@
+    <TemplateColumn Context="review" Title="User">
+        <div>@GetAuthorDisplay(review.UserId)</div>
+    </TemplateColumn>
     <PropertyColumn Property="review => review.ProductId" />
 
     <TemplateColumn Context="review">
@@ -33,10 +36,31 @@
 
 @code {
     private TechReviewzWebsiteContext context = default!;
+    private IList<Review> Reviews = Array.Empty<Review>();
+    private IList<TechReviewzWebsiteUser> DomainUsers = Array.Empty<TechReviewzWebsiteUser>();
 
     protected override void OnInitialized()
     {
         context = DbFactory.CreateDbContext();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var ctx = DbFactory.CreateDbContext();
+        Reviews = await ctx.Review.AsNoTracking().OrderByDescending(r => r.DateCreated).ToListAsync();
+
+        // load Identity users (TechReviewzWebsiteUser is in TechReviewzWebsite.Data)
+        DomainUsers = await ctx.Users.AsNoTracking().ToListAsync();
+    }
+
+    private string GetAuthorDisplay(string? userId)
+    {
+        if (string.IsNullOrEmpty(userId)) return "Unknown";
+        var u = DomainUsers.FirstOrDefault(x => x.Id == userId);
+        if (u is null) return "Unknown";
+        return string.IsNullOrWhiteSpace(u.FirstName) && string.IsNullOrWhiteSpace(u.LastName)
+            ? u.UserName ?? "Unknown"
+            : $"{u.FirstName} {u.LastName}".Trim();
     }
 
     public async ValueTask DisposeAsync() => await context.DisposeAsync();

@@ -1,9 +1,12 @@
 ﻿@page "/products/edit"
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
+@using System.Text.Json
+@using TechReviewzWebsite.Components.Shared
 @using TechReviewzWebsite.Domain
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
 @inject NavigationManager NavigationManager
+@rendermode InteractiveServer
 
 @attribute [Authorize(Roles = "Administrator")]
 
@@ -21,7 +24,7 @@ else
 {
     <div class="row">
         <div class="col-md-4">
-            <EditForm method="post" Model="Product" OnValidSubmit="UpdateProduct" FormName="edit" Enhance>
+            <EditForm Model="Product" OnValidSubmit="UpdateProduct" FormName="edit">
                 <DataAnnotationsValidator />
                 <ValidationSummary role="alert"/>
                 <input type="hidden" name="Product.Id" value="@Product.Id" />
@@ -52,25 +55,27 @@ else
                     <InputText id="brand" @bind-Value="Product.Brand" class="form-control" />
                     <ValidationMessage For="() => Product.Brand" class="text-danger" />
                 </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Specifications</label>
+                    <InputList @bind-Value="Specs" Placeholder="Add a specification (e.g. 8GB RAM)" />
+                    <ValidationMessage For="() => Product.Specification" class="text-danger" />
+                </div>
+
                 <div class="mb-3">
                     <label for="price" class="form-label">Price:</label>
                     <InputNumber id="price" @bind-Value="Product.Price" class="form-control" />
                     <ValidationMessage For="() => Product.Price" class="text-danger" />
                 </div>
                 <div class="mb-3" hidden>
-                    <label for="datecreated" class="form-label">DateCreated:</label>
-                    <InputDate id="datecreated" @bind-Value="Product.DateCreated" class="form-control" />
-                    <ValidationMessage For="() => Product.DateCreated" class="text-danger" />
+                    <label for="datereleased" class="form-label">DateReleased:</label>
+                    <InputDate id="datereleased" @bind-Value="Product.DateReleased" class="form-control" />
+                    <ValidationMessage For="() => Product.DateReleased" class="text-danger" />
                 </div>
                 <div class="mb-3" hidden>
                     <label for="dateppdated" class="form-label">DateUpdated:</label>
                     <InputDate id="dateppdated" @bind-Value="Product.DateUpdated" class="form-control" />
                     <ValidationMessage For="() => Product.DateUpdated" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="imageurl" class="form-label">ImageUrl:</label>
-                    <InputText id="imageurl" @bind-Value="Product.ImageUrl" class="form-control" />
-                    <ValidationMessage For="() => Product.ImageUrl" class="text-danger" />
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
@@ -100,6 +105,9 @@ else
         "Home Appliances"
     };
 
+    // Specs backing list used by InputList
+    private List<string> Specs { get; set; } = new();
+
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
@@ -108,6 +116,24 @@ else
         if (Product is null)
         {
             NavigationManager.NavigateTo("notfound");
+            return;
+        }
+
+        // Populate Specs from Product.Specification (JSON array) or fallback to CSV
+        if (!string.IsNullOrWhiteSpace(Product.Specification))
+        {
+            try
+            {
+                Specs = JsonSerializer.Deserialize<List<string>>(Product.Specification) ?? new();
+            }
+            catch
+            {
+                Specs = Product.Specification
+                            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => s.Trim())
+                            .Where(s => s.Length > 0)
+                            .ToList();
+            }
         }
     }
 
@@ -115,11 +141,12 @@ else
     {
         using var context = DbFactory.CreateDbContext();
 
-        //Set the DateCreated and DateUpdated fields to the current date and time.
-        Product.DateCreated = DateTime.Now;
+        // serialize specs back into Specification string
+        Product!.Specification = Specs.Count == 0 ? null : JsonSerializer.Serialize(Specs);
+
         Product.DateUpdated = DateTime.Now;
 
-        context.Attach(Product!).State = EntityState.Modified;
+        context.Attach(Product).State = EntityState.Modified;
 
         try
         {

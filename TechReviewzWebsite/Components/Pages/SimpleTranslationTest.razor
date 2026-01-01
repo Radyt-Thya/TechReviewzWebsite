@@ -1,0 +1,70 @@
+@page "/simple-translation-test"
+@rendermode InteractiveServer
+@inject TranslationService TS
+@inject TranslationStateService State
+@implements IDisposable
+
+<h3>Simple Translation Test</h3>
+
+<div class="alert alert-info">
+    <strong>Language:</strong> @(State.CurrentLanguage ?? "English")
+</div>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="SetSpanish">Set Spanish</button>
+    <button class="btn btn-primary" @onclick="SetFrench">Set French</button>
+    <button class="btn btn-secondary" @onclick="ResetLang">Reset</button>
+</div>
+
+<div class="card p-3">
+    <h4>Original Text:</h4>
+    <p>Hello World</p>
+    <p>Welcome to TechReviewz</p>
+    
+    <h4 class="mt-3">Translated Text:</h4>
+    <p>@TranslatedHello</p>
+    <p>@TranslatedWelcome</p>
+</div>
+
+@code {
+    private string? TranslatedHello;
+    private string? TranslatedWelcome;
+
+    protected override void OnInitialized()
+    {
+        State.OnLanguageChanged += HandleLanguageChange;
+        _ = UpdateTranslations();
+    }
+
+    private async void HandleLanguageChange()
+    {
+        await InvokeAsync(async () =>
+        {
+            await UpdateTranslations();
+            StateHasChanged();
+        });
+    }
+
+    private void SetSpanish() => State.CurrentLanguage = "es";
+    private void SetFrench() => State.CurrentLanguage = "fr";
+    private void ResetLang() => State.CurrentLanguage = null;
+
+    private async Task UpdateTranslations()
+    {
+        if (string.IsNullOrEmpty(State.CurrentLanguage))
+        {
+            TranslatedHello = "Hello World";
+            TranslatedWelcome = "Welcome to TechReviewz";
+        }
+        else
+        {
+            TranslatedHello = await TS.TranslateTextAsync("Hello World", State.CurrentLanguage) ?? "Hello World";
+            TranslatedWelcome = await TS.TranslateTextAsync("Welcome to TechReviewz", State.CurrentLanguage) ?? "Welcome to TechReviewz";
+        }
+    }
+
+    public void Dispose()
+    {
+        State.OnLanguageChanged -= HandleLanguageChange;
+    }
+}

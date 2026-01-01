@@ -1,6 +1,7 @@
 ﻿@page "/products"
 @page "/products/{category}"
 @using System.Linq
+@using System.Text.Json
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
@@ -9,54 +10,116 @@
 @implements IAsyncDisposable
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
 @inject NavigationManager NavigationManager
+@rendermode InteractiveServer
 
 @attribute [Authorize(Roles = "Administrator, User")]
 
 <PageTitle>Index</PageTitle>
 
-<h1><b>Products</b></h1>
+<div class="background">
+    <div class="panel1">
+        <h1><b>Products</b></h1>
+        <hr />
+        <div class="search-container spacing" role="search" style="display: flex; width:1000px; ">
+            <label for="search" style="align-content: center; margin-right: 10px;">Search:</label>
+            <input id="search" class="form-control" style="margin-right: 10px;" type="search" placeholder="Search products by name" @bind="searchText" @bind:event="oninput" />
+            <button class="btn btn-primary" style="margin-right: 10px;" @onclick="ApplySearch">Search</button>
+            <button class="btn btn-secondary" @onclick="ClearSearch">Clear</button>
+        </div>
 
-<p>
-    <AuthorizeView Roles="Administrator">
-        <Authorized>
-            <a href="/products/create">Create New</a>
-        </Authorized>
-    </AuthorizeView>
-</p>
+        <p>
+            <hr />
+            <div style="display: flex; gap:8px; align-items:center; margin-bottom: 10px;">
+                <h6 style="margin:0;">Compare 2 products:</h6>
+                <button class="btn btn-outline-primary" @onclick="NavigateToCompare" disabled="@(SelectedProductIds.Count != 2)">
+                    Compare (@SelectedProductIds.Count)
+                </button>
+            </div>
+            <AuthorizeView Roles="Administrator">
+                <Authorized>
+                    <div style="display: flex; gap:8px; align-items:center;">
+                        <h6 style="margin:0;">Create new products:</h6>
+                        <button class="btn btn-primary" @onclick="NavigateToCreate">New</button>
+                    </div>                   
+                </Authorized>
+            </AuthorizeView>
+            <hr />
+        </p>
 
-<QuickGrid TItem="Product" Class="table" Items="@(Products.AsQueryable())">
-    <PropertyColumn Property="product => product.Name" />
-    <PropertyColumn Property="product => product.Description" />
-    <PropertyColumn Property="product => product.Category" />
-    <PropertyColumn Property="product => product.Brand" />
-    <PropertyColumn Property="product => product.Price" />
-    <PropertyColumn Property="product => product.DateCreated" />
-    <PropertyColumn Property="product => product.DateUpdated" />
-    <PropertyColumn Property="product => product.ImageUrl" />
+        <QuickGrid TItem="Product" Class="table" Items="@(Products.AsQueryable())" Pagination="paginationState">
+            @* selection checkbox column *@
+            <TemplateColumn Context="product" Title="Compare">
+                <input type="checkbox"
+                       checked="@SelectedProductIds.Contains(product.Id)"
+                       @onchange="@(e => ToggleSelection(product.Id, e))" />
+            </TemplateColumn>
 
-    <TemplateColumn Context="product">
-        <AuthorizeView Roles="Administrator">
-            <Authorized>
-                <a href="@($"/products/edit?id={product.Id}")">Edit</a> |
-            </Authorized>
-        </AuthorizeView>
+            <PropertyColumn Property="product => product.Name" Sortable="true" />
+            <PropertyColumn Property="product => product.Description" Sortable="true" />
+            <PropertyColumn Property="product => product.Category" Sortable="true" />
+            <PropertyColumn Property="product => product.Brand" Sortable="true" />
 
-        <a href="@($"/products/details?id={product.Id}")">Details</a>
+            <TemplateColumn Context="product" Title="Specifications">
+                @{
+                    string specsText;
+                    if (string.IsNullOrWhiteSpace(product.Specification))
+                    {
+                        specsText = "";
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var arr = JsonSerializer.Deserialize<string[]>(product.Specification);
+                            specsText = arr is null ? product.Specification : string.Join(", ", arr);
+                        }
+                        catch
+                        {
+                            specsText = product.Specification;
+                        }
+                    }
+                }
+                @specsText
+            </TemplateColumn>
 
-        <AuthorizeView Roles="Administrator">
-            <Authorized>
-                | <a href="@($"/products/delete?id={product.Id}")">Delete</a>
-            </Authorized>
-        </AuthorizeView>
-    </TemplateColumn>
-</QuickGrid>
+            <PropertyColumn Property="product => product.Price" Sortable="true" />
+            <PropertyColumn Property="product => product.DateReleased" Sortable="true" />
+
+            <TemplateColumn Context="product">
+                <AuthorizeView Roles="Administrator">
+                    <Authorized>
+                        <a href="@($"/products/edit?id={product.Id}")">Edit</a> |
+                    </Authorized>
+                </AuthorizeView>
+
+                <a href="@($"/products/details?id={product.Id}")">Details</a>
+
+                <AuthorizeView Roles="Administrator">
+                    <Authorized>
+                        | <a href="@($"/products/delete?id={product.Id}")">Delete</a>
+                    </Authorized>
+                </AuthorizeView>
+            </TemplateColumn>
+        </QuickGrid>
+
+        <Paginator State="paginationState" />
+    </div>
+</div>
 
 @code {
+    PaginationState paginationState = new PaginationState { ItemsPerPage = 5 };
+
     [Parameter]
     public string? category { get; set; } // captured from route: slug
 
     private TechReviewzWebsiteContext context = default!;
     private List<Product> Products { get; set; } = new();
+
+    // search text bound to the input
+    private string? searchText;
+
+    // selection for comparison (store product IDs)
+    private HashSet<int> SelectedProductIds { get; } = new();
 
     protected override void OnInitialized()
     {
@@ -65,34 +128,99 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        // category is a slug (e.g. "smartphones-tablets") — convert back to display or match DB values
         string? categoryFilter = null;
         if (!string.IsNullOrWhiteSpace(category))
         {
             categoryFilter = DecodeSlugToDisplay(category);
         }
 
-        await LoadProductsAsync(categoryFilter);
+        await LoadProductsAsync(categoryFilter, searchText);
     }
 
     private static string DecodeSlugToDisplay(string slug)
     {
-        // Basic decode: replace dashes with spaces and fix "and"
         var decoded = Uri.UnescapeDataString(slug).Replace('-', ' ');
         return decoded.Replace(" and ", " & ", StringComparison.OrdinalIgnoreCase);
     }
 
-    private async Task LoadProductsAsync(string? categoryFilter)
+    // load products with optional category and optional search by name (case-insensitive)
+    private async Task LoadProductsAsync(string? categoryFilter, string? nameSearch)
     {
         var query = context.Product.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrEmpty(categoryFilter))
         {
-            // comparison may need normalization depending on how Category is stored in DB
             query = query.Where(p => p.Category == categoryFilter);
         }
 
-        Products = await query.ToListAsync();
+        if (!string.IsNullOrWhiteSpace(nameSearch))
+        {
+            var term = nameSearch.Trim().ToLowerInvariant();
+            query = query.Where(p => p.Name != null && p.Name.ToLower().Contains(term));
+        }
+
+        Products = await query.OrderBy(p => p.Name).ToListAsync();
+    }
+
+    // selection toggle for checkbox
+    private void ToggleSelection(int productId, ChangeEventArgs e)
+    {
+        var isChecked = e.Value is bool b && b;
+        if (isChecked)
+        {
+            // only allow up to 2
+            if (SelectedProductIds.Count < 2)
+            {
+                SelectedProductIds.Add(productId);
+            }
+            else
+            {
+                // replace oldest selection for convenience
+                var first = SelectedProductIds.First();
+                SelectedProductIds.Remove(first);
+                SelectedProductIds.Add(productId);
+            }
+        }
+        else
+        {
+            SelectedProductIds.Remove(productId);
+        }
+
+        StateHasChanged();
+    }
+
+    private void NavigateToCreate() => NavigationManager.NavigateTo("/products/create");
+
+    // navigate to compare page with two selected ids
+    private void NavigateToCompare()
+    {
+        if (SelectedProductIds.Count != 2) return;
+        var ids = SelectedProductIds.ToArray();
+        NavigationManager.NavigateTo($"/products/compare?left={ids[0]}&right={ids[1]}");
+    }
+
+    // called from @bind:event="oninput" for immediate filtering as user types
+    private async Task ApplySearch()
+    {
+        string? categoryFilter = null;
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            categoryFilter = DecodeSlugToDisplay(category);
+        }
+
+        await LoadProductsAsync(categoryFilter, searchText);
+    }
+
+    private async Task ClearSearch()
+    {
+        searchText = null;
+        string? categoryFilter = null;
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            categoryFilter = DecodeSlugToDisplay(category);
+        }
+
+        await LoadProductsAsync(categoryFilter, null);
     }
 
     public async ValueTask DisposeAsync()

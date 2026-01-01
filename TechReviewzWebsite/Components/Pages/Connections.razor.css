@@ -1,6 +1,6 @@
 ﻿.background {
     position: absolute;
-    height: 855px;
+    height: 1800px;
     width: 100%;
     top: 60px;
     left: 0;
@@ -9,9 +9,9 @@
 
 .panel1 {
     position: absolute;
-    height: 75%;
+    height: 90%;
     width: 90%;
-    top: 135px;
+    top: 100px;
     left: 100px;
     background-color: white;
     padding: 50px;
@@ -19,11 +19,11 @@
     box-shadow: 0 15px 27px rgba(0,0,0,.15);
 }
 
-.heading {
-    position: absolute;
-    left: 50px;
-    padding: 50px;
-    font-size: 24px;
-    color: black;
-    z-index: 2;
+.profile {
+    display: flex;
+    align-items: center;
+}
+
+.profile_details {
+    flex-direction: column;
 }
