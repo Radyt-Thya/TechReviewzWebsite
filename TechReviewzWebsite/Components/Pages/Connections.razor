@@ -1,4 +1,5 @@
 ﻿@page "/connections"
+@page "/connections/{ViewUserId?}"
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using Microsoft.EntityFrameworkCore
@@ -12,18 +13,39 @@
 @implements IDisposable
 @rendermode InteractiveServer
 
-<PageTitle>Connections</PageTitle>
+<PageTitle>@(ViewingOtherUser ? $"{viewedUserDisplay}'s Profile" : "Connections")</PageTitle>
 
 <div class="background">
     <div class="panel1">
-        <h1><b>Account</b></h1>
+        <h1><b>@(ViewingOtherUser ? $"{viewedUserDisplay}'s Profile" : "Account")</b></h1>
         <hr />
         <div class="profile">
             <label>
                 <svg xmlns="http://www.w3.org/2000/svg" height="200px" viewBox="0 -960 960 960" width="200px" fill="#e3e3e3"><path d="M234-276q51-39 114-61.5T480-360q69 0 132 22.5T726-276q35-41 54.5-93T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 59 19.5 111t54.5 93Zm246-164q-59 0-99.5-40.5T340-580q0-59 40.5-99.5T480-720q59 0 99.5 40.5T620-580q0 59-40.5 99.5T480-440Zm0 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q53 0 100-15.5t86-44.5q-39-29-86-44.5T480-280q-53 0-100 15.5T294-220q39 29 86 44.5T480-160Zm0-360q26 0 43-17t17-43q0-26-17-43t-43-17q-26 0-43 17t-17 43q0 26 17 43t43 17Zm0-60Zm0 360Z" /></svg>
             </label>
             <div class="profile_details">
-                @if (currentUserName is null)
+                @if (ViewingOtherUser)
+                {
+                    <h3><b>@viewedUserDisplay</b></h3>
+                    <h5>Username: @viewedUserName</h5>
+                    @if (!string.IsNullOrEmpty(currentUserName) && currentUserName != viewedUserName)
+                    {
+                        <div class="mt-2">
+                            @if (IsFollowing(viewedUserName))
+                            {
+                                <button class="btn btn-outline-danger" @onclick="() => UnfollowUser(viewedUserName)">Unfollow</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-primary" @onclick="() => FollowUser(viewedUserName)">Follow</button>
+                            }
+                        </div>
+                    }
+                    <div class="mt-3">
+                        <button class="btn btn-secondary" @onclick="ReturnToMyProfile">Back to My Profile</button>
+                    </div>
+                }
+                else if (currentUserName is null)
                 {
                     <h3><b>Loading...</b></h3>
                     <h5>Email: —</h5>
@@ -34,207 +56,266 @@
                     <h5>Email: @currentUserEmail</h5>
                 }
             </div>
-            
         </div>
-        <h1><b>Connections</b></h1>
+
+        @* Reviews Section *@
+        <h1><b>@(ViewingOtherUser ? $"{viewedUserDisplay}'s Reviews" : "My Reviews")</b></h1>
         <hr />
-
-        @if (!string.IsNullOrEmpty(StatusMessage))
+        
+        @if (userReviews == null)
         {
-            <div class="alert alert-info">@StatusMessage</div>
+            <p><em>Loading reviews...</em></p>
         }
-
-        @* Followers section: shows people who follow the current user *@
-        @if (currentUserName is null)
+        else if (!userReviews.Any())
         {
-            <p><em>Loading followers...</em></p>
+            <div class="text-muted">@(ViewingOtherUser ? "This user hasn't created any reviews yet." : "You haven't created any reviews yet.")</div>
         }
         else
         {
-            <div class="mb-3">
-                <h3>Followers (@FollowerCount)</h3>
-                <hr />
-            </div>
-
-            var followerUsers = users
-                .Where(u => !string.IsNullOrEmpty(u.UserName) && IsFollower(u.UserName))
-                .ToList();
-
-            if (!followerUsers.Any())
-            {
-                <div class="text-muted">No one is following you yet.</div>
-            }
-            else
-            {
-                <div class="list-group mb-4">
-                    @foreach (var u in followerUsers)
+            <div class="mb-4">
+                <QuickGrid TItem="Review" Class="table" Items="userReviews.AsQueryable()">
+                    <PropertyColumn Property="review => review.Title" Title="Title" />
+                    <PropertyColumn Property="review => review.Content" Title="Content" />
+                    <PropertyColumn Property="review => review.Category" Title="Category" />
+                    <PropertyColumn Property="review => review.Rating" Title="Rating" />
+                    <PropertyColumn Property="review => review.DateCreated" Title="Created" Format="yyyy-MM-dd" />
+                    <PropertyColumn Property="review => review.DateUpdated" Title="Updated" Format="yyyy-MM-dd" />
+                    
+                    @if (!ViewingOtherUser)
                     {
-                        <div class="list-group-item d-flex justify-content-between align-items-center" id="follower-@u.UserName">
-                            <div>
-                                @if (u.FirstName == null)
-                                {
-                                    <strong>Generic User</strong>
-                                    <div class="small">@($"{u.UserName}")</div>
-                                }
-                                <strong>@u.FirstName @u.LastName</strong>
-                                @if (!string.IsNullOrEmpty(u.FirstName) || !string.IsNullOrEmpty(u.LastName))
-                                {
-                                    <div class="small">@($"{u.UserName}")</div>
-                                }
-                            </div>
-
-                            <div class="btn-group">
-                                @if (!IsFollowing(u.UserName))
-                                {
-                                    <button class="btn btn-outline-primary" @onclick="() => FollowUser(u.UserName)">Follow back</button>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-outline-secondary" disabled>Following</button>
-                                }
-                            </div>
-                        </div>
+                        <TemplateColumn Context="review" Title="Actions">
+                            <a href="@($"reviews/edit?id={review.Id}")">Edit</a> |
+                            <a href="@($"reviews/details?id={review.Id}")">Details</a> |
+                            <a href="@($"reviews/delete?id={review.Id}")">Delete</a>
+                        </TemplateColumn>
                     }
-                </div>
-            }
-        }
-
-        @* Following count shown at the top (how many people the current user is following) *@
-        @if (currentUserName is null)
-        {
-            <p><em>Loading...</em></p>
-        }
-        else
-        {
-            <div class="mb-3">
-                <h3>Following (@FollowingCount)</h3>
-                <hr />
+                    else
+                    {
+                        <TemplateColumn Context="review" Title="Actions">
+                            <a href="@($"reviews/details?id={review.Id}")">Details</a>
+                        </TemplateColumn>
+                    }
+                </QuickGrid>
             </div>
         }
 
-        @if (currentUserName is null)
+        @if (!ViewingOtherUser)
         {
-            <p><em>Loading...</em></p>
-        }
-        else
-        {
-            var followingUsers = users.Where(u => !string.IsNullOrEmpty(u.UserName) && IsFollowing(u.UserName)).ToList();
-            if (!followingUsers.Any())
+            <h1><b>Connections</b></h1>
+            <hr />
+
+            @if (!string.IsNullOrEmpty(StatusMessage))
             {
-                <div class="text-muted">You are not following anyone yet.</div>
+                <div class="alert alert-info">@StatusMessage</div>
+            }
+
+            @* Followers section: shows people who follow the current user *@
+            @if (currentUserName is null)
+            {
+                <p><em>Loading followers...</em></p>
             }
             else
             {
-                <div class="list-group mb-4">
-                    @foreach (var u in followingUsers)
-                    {
-                        <div class="list-group-item d-flex justify-content-between align-items-center" id="following-@u.UserName">
-                            <div>
-                                @if (u.FirstName == null)
-                                {
-                                    <strong>Generic User</strong>
-                                    <div class="small">@($"{u.UserName}")</div>
-                                }
-                                <strong>@u.FirstName @u.LastName</strong>
-                                @if (!string.IsNullOrEmpty(u.FirstName) || !string.IsNullOrEmpty(u.LastName))
-                                {
-                                    <div class="small">@($"{u.UserName}")</div>
-                                }
-                            </div>
-
-                            <div class="btn-group">
-                                <button class="btn btn-outline-danger" @onclick="() => UnfollowUser(u.UserName)">Unfollow</button>
-                            </div>
-                        </div>
-                    }
+                <div class="mb-3">
+                    <h3>Followers (@FollowerCount)</h3>
+                    <hr />
                 </div>
-            }
-        }
 
-        <h3>Connect with other People</h3>
-        <hr />
-        @if (currentUserName is null)
-        {
-            <!-- nothing to show -->
-        }
-        else
-        {
-            @* compute filtered list first *@
-            var otherUsers = users
-                .Where(u => !string.IsNullOrEmpty(u.UserName) && u.UserName != currentUserName && !IsFollowing(u.UserName))
-                .OrderBy(u => u.UserName)
-                .ToList();
-
-            @if (!otherUsers.Any())
-            {
-                <div class="text-muted">No more people to follow.</div>
-            }
-            else
-            {
-                @* paged subset *@
-                var paged = otherUsers
-                    .Skip((paginationState.CurrentPage - 1) * paginationState.ItemsPerPage)
-                    .Take(paginationState.ItemsPerPage)
+                var followerUsers = users
+                    .Where(u => !string.IsNullOrEmpty(u.UserName) && IsFollower(u.UserName))
                     .ToList();
 
-                <div class="list-group">
-                    @foreach (var u in paged)
-                    {
-                        <div class="list-group-item d-flex justify-content-between align-items-center" id="user-@u.UserName">
-                            <div>
-                                @if (u.FirstName == null)
-                                {
-                                    <strong>Generic User</strong>
-                                    <div class="small">@($"{u.UserName}")</div>
-                                }
-                                <strong>@u.FirstName @u.LastName</strong>
-                                @if (!string.IsNullOrEmpty(u.FirstName) || !string.IsNullOrEmpty(u.LastName))
-                                {
-                                    <div class="small">@($"{u.UserName}")</div>
-                                }
-                            </div>
-
-                            <div class="btn-group">
-                                <button class="btn btn-outline-primary" @onclick="() => FollowUser(u.UserName)">Follow</button>
-                            </div>
-                        </div>
-                    }
-                </div>
-
-                @* pager controls *@
-                <nav class="mt-3" aria-label="Other users pagination">
-                    <ul class="pagination">
-                        <li class="page-item @(paginationState.CanPrevious ? "" : "disabled")">
-                            <button class="page-link" @onclick="PreviousPage">Previous</button>
-                        </li>
-
-                        @for (int p = 1; p <= paginationState.TotalPages(otherUsers.Count); p++)
+                if (!followerUsers.Any())
+                {
+                    <div class="text-muted">No one is following you yet.</div>
+                }
+                else
+                {
+                    <div class="list-group mb-4">
+                        @foreach (var u in followerUsers)
                         {
-                            <li class="page-item @(paginationState.CurrentPage == p ? "active" : "")">
-                                <button class="page-link" @onclick="() => GoToPage(p)">@p</button>
-                            </li>
-                        }
+                            <div class="list-group-item d-flex justify-content-between align-items-center" id="follower-@u.UserName">
+                                <div>
+                                    <a href="/connections/@u.Id" class="text-decoration-none">
+                                        @if (string.IsNullOrEmpty(u.FirstName) && string.IsNullOrEmpty(u.LastName))
+                                        {
+                                            <strong>Anonymous User</strong>
+                                            <div class="small">@u.UserName</div>
+                                        }
+                                        else
+                                        {
+                                            <strong>@u.FirstName @u.LastName</strong>
+                                            <div class="small">@u.UserName</div>
+                                        }
+                                    </a>
+                                </div>
 
-                        <li class="page-item @(paginationState.CanNext(otherUsers.Count) ? "" : "disabled")">
-                            <button class="page-link" @onclick="NextPage">Next</button>
-                        </li>
-                    </ul>
-                </nav>
+                                <div class="btn-group">
+                                    @if (!IsFollowing(u.UserName))
+                                    {
+                                        <button class="btn btn-outline-primary" @onclick="() => FollowUser(u.UserName)">Follow back</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-outline-secondary" disabled>Following</button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+
+            @* Following count shown at the top (how many people the current user is following) *@
+            @if (currentUserName is null)
+            {
+                <p><em>Loading...</em></p>
+            }
+            else
+            {
+                <div class="mb-3">
+                    <h3>Following (@FollowingCount)</h3>
+                    <hr />
+                </div>
+            }
+
+            @if (currentUserName is null)
+            {
+                <p><em>Loading...</em></p>
+            }
+            else
+            {
+                var followingUsers = users.Where(u => !string.IsNullOrEmpty(u.UserName) && IsFollowing(u.UserName)).ToList();
+                if (!followingUsers.Any())
+                {
+                    <div class="text-muted">You are not following anyone yet.</div>
+                }
+                else
+                {
+                    <div class="list-group mb-4">
+                        @foreach (var u in followingUsers)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center" id="following-@u.UserName">
+                                <div>
+                                    <a href="/connections/@u.Id" class="text-decoration-none">
+                                        @if (string.IsNullOrEmpty(u.FirstName) && string.IsNullOrEmpty(u.LastName))
+                                        {
+                                            <strong>Anonymous User</strong>
+                                            <div class="small">@u.UserName</div>
+                                        }
+                                        else
+                                        {
+                                            <strong>@u.FirstName @u.LastName</strong>
+                                            <div class="small">@u.UserName</div>
+                                        }
+                                    </a>
+                                </div>
+
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-danger" @onclick="() => UnfollowUser(u.UserName)">Unfollow</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+
+            <h3>Connect with other People</h3>
+            <hr />
+            @if (currentUserName is null)
+            {
+                <!-- nothing to show -->
+            }
+            else
+            {
+                @* compute filtered list first *@
+                var otherUsers = users
+                    .Where(u => !string.IsNullOrEmpty(u.UserName) && u.UserName != currentUserName && !IsFollowing(u.UserName))
+                    .OrderBy(u => u.UserName)
+                    .ToList();
+
+                @if (!otherUsers.Any())
+                {
+                    <div class="text-muted">No more people to follow.</div>
+                }
+                else
+                {
+                    @* paged subset *@
+                    var paged = otherUsers
+                        .Skip((paginationState.CurrentPage - 1) * paginationState.ItemsPerPage)
+                        .Take(paginationState.ItemsPerPage)
+                        .ToList();
+
+                    <div class="list-group">
+                        @foreach (var u in paged)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center" id="user-@u.UserName">
+                                <div>
+                                    <a href="/connections/@u.Id" class="text-decoration-none">
+                                        @if (string.IsNullOrEmpty(u.FirstName) && string.IsNullOrEmpty(u.LastName))
+                                        {
+                                            <strong>Anonymous User</strong>
+                                            <div class="small">@u.UserName</div>
+                                        }
+                                        else
+                                        {
+                                            <strong>@u.FirstName @u.LastName</strong>
+                                            <div class="small">@u.UserName</div>
+                                        }
+                                    </a>
+                                </div>
+
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-primary" @onclick="() => FollowUser(u.UserName)">Follow</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    @* pager controls *@
+                    <nav class="mt-3" aria-label="Other users pagination">
+                        <ul class="pagination">
+                            <li class="page-item @(paginationState.CanPrevious ? "" : "disabled")">
+                                <button class="page-link" @onclick="PreviousPage">Previous</button>
+                            </li>
+
+                            @for (int p = 1; p <= paginationState.TotalPages(otherUsers.Count); p++)
+                            {
+                                var pageNum = p;
+                                <li class="page-item @(paginationState.CurrentPage == pageNum ? "active" : "")">
+                                    <button class="page-link" @onclick="() => GoToPage(pageNum)">@pageNum</button>
+                                </li>
+                            }
+
+                            <li class="page-item @(paginationState.CanNext(otherUsers.Count) ? "" : "disabled")">
+                                <button class="page-link" @onclick="NextPage">Next</button>
+                            </li>
+                        </ul>
+                    </nav>
+                }
             }
         }
     </div>
 </div>
 
 @code {
+    [Parameter]
+    public string? ViewUserId { get; set; }
+
     // pagination helper stored in the component (no extra files)
     private PaginationState paginationState = new PaginationState { ItemsPerPage = 6, CurrentPage = 1 };
 
     private string? currentUserName;
     private string? currentUserEmail;
     private string? currentUserDisplay;
+    private string? viewedUserName;
+    private string? viewedUserDisplay;
     private IList<TechReviewzWebsiteUser> users = Array.Empty<TechReviewzWebsiteUser>();
     private IList<Connection> connections = Array.Empty<Connection>();
+    private List<Review>? userReviews;
     private string? StatusMessage;
+
+    private bool ViewingOtherUser => !string.IsNullOrEmpty(ViewUserId);
 
     // computed count of people the current user is following
     private int FollowingCount => connections.Count(c =>
@@ -255,13 +336,18 @@
         await LoadDataAsync();
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadDataAsync();
+    }
+
     private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
         // when the user navigates to /connections reload data
         try
         {
             var uri = new Uri(e.Location);
-            if (uri.AbsolutePath.Equals("/connections", StringComparison.OrdinalIgnoreCase))
+            if (uri.AbsolutePath.StartsWith("/connections", StringComparison.OrdinalIgnoreCase))
             {
                 await InvokeAsync(async () =>
                 {
@@ -280,7 +366,7 @@
     {
         using var context = DbFactory.CreateDbContext();
 
-        // Get current user from AuthenticationState instead of HttpContext
+        // Get current user from AuthenticationState
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
@@ -301,6 +387,43 @@
 
         users = await context.Users.AsNoTracking().ToListAsync();
         connections = await context.Connection.AsNoTracking().ToListAsync();
+
+        // Load reviews based on whether viewing own profile or another user's profile
+        if (ViewingOtherUser)
+        {
+            var viewedUser = await context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == ViewUserId);
+
+            if (viewedUser != null)
+            {
+                viewedUserName = viewedUser.UserName;
+                viewedUserDisplay = !string.IsNullOrWhiteSpace(viewedUser.FirstName) || !string.IsNullOrWhiteSpace(viewedUser.LastName)
+                    ? $"{viewedUser.FirstName} {viewedUser.LastName}".Trim()
+                    : viewedUser.UserName;
+
+                userReviews = await context.Review
+                    .AsNoTracking()
+                    .Where(r => r.UserId == ViewUserId)
+                    .OrderByDescending(r => r.DateCreated)
+                    .ToListAsync();
+            }
+        }
+        else if (!string.IsNullOrEmpty(currentUserName))
+        {
+            var currentUser = await context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserName == currentUserName);
+
+            if (currentUser != null)
+            {
+                userReviews = await context.Review
+                    .AsNoTracking()
+                    .Where(r => r.UserId == currentUser.Id)
+                    .OrderByDescending(r => r.DateCreated)
+                    .ToListAsync();
+            }
+        }
 
         // reset paging when data changes
         paginationState.CurrentPage = 1;
@@ -338,6 +461,11 @@
     private void GoToPage(int page)
     {
         paginationState.CurrentPage = page;
+    }
+
+    private void ReturnToMyProfile()
+    {
+        NavigationManager.NavigateTo("/connections");
     }
 
     public void Dispose()

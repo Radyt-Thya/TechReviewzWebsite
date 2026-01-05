@@ -6,18 +6,21 @@
 }
 
 .panel1_txt {
-    top: 400px;
-    left: 450px;
+    top: 250px;
+    left: 50%;
     z-index: 2;
 }
 
 .panel1_img {
     position: absolute;
-    height: 500px;
-    width: 1420px;
-    top: 60px;
-    left: 250px;
-    background-color: white;
+    height: 600px;
+    width: 50%;
+    aspect-ratio: 10/9;
+    object-fit: cover;
+    top: 0px;
+    left: 0px;
+    filter: blur(1px);
+    box-shadow: 0 30px 50px rgba(0,0,0,.15);
 }
 
 .panel2 {
@@ -79,9 +82,12 @@
     position: absolute;
     height: 400px;
     width: 700px;
+    aspect-ratio: 10/9;
+    object-fit: cover;
     top: 50px;
     left: 125px;
     background-color: white;
+    box-shadow: 0 30px 50px rgba(0,0,0,.15);
 }
 
 .panel5 {

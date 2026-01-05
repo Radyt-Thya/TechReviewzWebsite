@@ -1,8 +1,11 @@
 ﻿@page "/reviews/delete"
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using TechReviewzWebsite.Domain
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
 @inject NavigationManager NavigationManager
+
+@attribute [Authorize(Roles = "Administrator")]
 
 <PageTitle>Delete</PageTitle>
 

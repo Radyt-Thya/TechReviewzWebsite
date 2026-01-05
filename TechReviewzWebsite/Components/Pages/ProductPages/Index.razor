@@ -10,9 +10,8 @@
 @implements IAsyncDisposable
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @rendermode InteractiveServer
-
-@attribute [Authorize(Roles = "Administrator, User")]
 
 <PageTitle>Index</PageTitle>
 
@@ -46,7 +45,7 @@
             <hr />
         </p>
 
-        <QuickGrid TItem="Product" Class="table" Items="@(Products.AsQueryable())" Pagination="paginationState">
+        <QuickGrid TItem="Product" Class="table" Items="@(Products.AsQueryable())" Pagination="@CurrentPaginationState">
             @* selection checkbox column *@
             <TemplateColumn Context="product" Title="Compare">
                 <input type="checkbox"
@@ -102,28 +101,36 @@
             </TemplateColumn>
         </QuickGrid>
 
-        <Paginator State="paginationState" />
+        <Paginator State="@CurrentPaginationState" />
     </div>
 </div>
 
 @code {
-    PaginationState paginationState = new PaginationState { ItemsPerPage = 5 };
+    PaginationState paginationStateAdmin = new PaginationState { ItemsPerPage = 5 };
+    PaginationState paginationStateUser = new PaginationState { ItemsPerPage = 6 };
+
+    private PaginationState CurrentPaginationState = new PaginationState { ItemsPerPage = 6 };
+    private bool isAdmin = false;
 
     [Parameter]
-    public string? category { get; set; } // captured from route: slug
+    public string? category { get; set; }
 
     private TechReviewzWebsiteContext context = default!;
     private List<Product> Products { get; set; } = new();
 
-    // search text bound to the input
     private string? searchText;
-
-    // selection for comparison (store product IDs)
     private HashSet<int> SelectedProductIds { get; } = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         context = DbFactory.CreateDbContext();
+
+        // Determine user role and set appropriate pagination
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        
+        isAdmin = user.IsInRole("Administrator");
+        CurrentPaginationState = isAdmin ? paginationStateAdmin : paginationStateUser;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -143,7 +150,6 @@
         return decoded.Replace(" and ", " & ", StringComparison.OrdinalIgnoreCase);
     }
 
-    // load products with optional category and optional search by name (case-insensitive)
     private async Task LoadProductsAsync(string? categoryFilter, string? nameSearch)
     {
         var query = context.Product.AsNoTracking().AsQueryable();
@@ -162,20 +168,17 @@
         Products = await query.OrderBy(p => p.Name).ToListAsync();
     }
 
-    // selection toggle for checkbox
     private void ToggleSelection(int productId, ChangeEventArgs e)
     {
         var isChecked = e.Value is bool b && b;
         if (isChecked)
         {
-            // only allow up to 2
             if (SelectedProductIds.Count < 2)
             {
                 SelectedProductIds.Add(productId);
             }
             else
             {
-                // replace oldest selection for convenience
                 var first = SelectedProductIds.First();
                 SelectedProductIds.Remove(first);
                 SelectedProductIds.Add(productId);
@@ -191,7 +194,6 @@
 
     private void NavigateToCreate() => NavigationManager.NavigateTo("/products/create");
 
-    // navigate to compare page with two selected ids
     private void NavigateToCompare()
     {
         if (SelectedProductIds.Count != 2) return;
@@ -199,7 +201,6 @@
         NavigationManager.NavigateTo($"/products/compare?left={ids[0]}&right={ids[1]}");
     }
 
-    // called from @bind:event="oninput" for immediate filtering as user types
     private async Task ApplySearch()
     {
         string? categoryFilter = null;

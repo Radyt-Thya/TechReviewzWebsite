@@ -3,43 +3,49 @@
 @using TechReviewzWebsite.Domain
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
 @inject NavigationManager NavigationManager
+@rendermode InteractiveServer
 
 <PageTitle>Details</PageTitle>
 
-<h1>Details</h1>
-
-<div>
-    <h2>Product</h2>
-    <hr />
-    @if (product is null)
-    {
-        <p><em>Loading...</em></p>
-    }
-    else {
-        <dl class="row">
-            <dt class="col-sm-2">Name</dt>
-            <dd class="col-sm-10">@product.Name</dd>
-            <dt class="col-sm-2">Description</dt>
-            <dd class="col-sm-10">@product.Description</dd>
-            <dt class="col-sm-2">Category</dt>
-            <dd class="col-sm-10">@product.Category</dd>
-            <dt class="col-sm-2">Brand</dt>
-            <dd class="col-sm-10">@product.Brand</dd>
-            <dt class="col-sm-2">Specification</dt>
-            <dd class="col-sm-10">@product.Specification</dd>
-            <dt class="col-sm-2">Price</dt>
-            <dd class="col-sm-10">@product.Price</dd>
-            <dt class="col-sm-2">DateCreated</dt>
-            <dd class="col-sm-10">@product.DateReleased</dd>
-            <dt class="col-sm-2">DateReleased</dt>
-            <dd class="col-sm-10">@product.DateUpdated</dd>
-        </dl>
-        <div>
-            <a href="@($"/products/edit?id={product.Id}")">Edit</a> |
-            <a href="@($"/products")">Back to List</a>
-        </div>
-    }
+<div class="background">
+    <div class="heading">
+        <h1><b>Product Details</b></h1>
+    </div>
+    <div class="panel1">
+        <h2>Product</h2>
+        <hr />
+        @if (product is null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else
+        {
+            <dl class="row">
+                <dt class="col-sm-2">Name</dt>
+                <dd class="col-sm-10">@product.Name</dd>
+                <dt class="col-sm-2">Description</dt>
+                <dd class="col-sm-10">@product.Description</dd>
+                <dt class="col-sm-2">Category</dt>
+                <dd class="col-sm-10">@product.Category</dd>
+                <dt class="col-sm-2">Brand</dt>
+                <dd class="col-sm-10">@product.Brand</dd>
+                <dt class="col-sm-2">Specification</dt>
+                <dd class="col-sm-10">@product.Specification</dd>
+                <dt class="col-sm-2">Price</dt>
+                <dd class="col-sm-10">@product.Price</dd>
+                <dt class="col-sm-2">DateCreated</dt>
+                <dd class="col-sm-10">@product.DateReleased</dd>
+                <dt class="col-sm-2">DateReleased</dt>
+                <dd class="col-sm-10">@product.DateUpdated</dd>
+            </dl>
+            <div>
+                <button class="btn btn-primary" @onclick=NavigateToProductEdit>Edit</button>
+                <button class="btn btn-secondary" @onclick=NavigateToProduct>Back to List</button>
+            </div>
+        }
+    </div>
 </div>
+
 
 @code {
     private Product? product;
@@ -57,4 +63,7 @@
             NavigationManager.NavigateTo("notfound");
         }
     }
+
+    private void NavigateToProduct() => NavigationManager.NavigateTo("/products");
+    private void NavigateToProductEdit() => NavigationManager.NavigateTo($"/products/edit?id={product.Id}");
 }

@@ -13,6 +13,17 @@
     box-shadow: 0 15px 27px rgba(0,0,0,.15);
 }
 
+.login_image {
+    position: absolute;
+    width: 950px;
+    height: 855px;
+    aspect-ratio: 10/9;
+    object-fit: cover;
+    left: 960px;
+    top: 60px;
+    box-shadow: 0 15px 27px rgba(0,0,0,.15);
+}
+
 .spacing {
     margin-bottom: 20px;
 }

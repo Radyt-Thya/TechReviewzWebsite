@@ -1,9 +1,12 @@
 ﻿@page "/products/create"
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using TechReviewzWebsite.Domain
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
+
+@attribute [Authorize(Roles = "Administrator")]
 
 <PageTitle>Create</PageTitle>
 

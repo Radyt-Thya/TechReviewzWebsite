@@ -1,8 +1,12 @@
 ﻿@page "/reviews/edit"
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
 @using TechReviewzWebsite.Domain
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@rendermode InteractiveServer
 
 <PageTitle>Edit</PageTitle>
 
@@ -10,72 +14,95 @@
 
 <h2>Review</h2>
 <hr />
+
 @if (Review is null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
-    <div class="row">
-        <div class="col-md-4">
-            <EditForm method="post" Model="Review" OnValidSubmit="UpdateReview" FormName="edit" Enhance>
-                <DataAnnotationsValidator />
-                <ValidationSummary role="alert"/>
-                <input type="hidden" name="Review.Id" value="@Review.Id" />
+    <AuthorizeView Context="authContext">
+        <Authorized>
+            @if (authContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value == Review.UserId)
+            {
+                <div class="row">
+                    <div class="col-md-4">
+                        <EditForm method="post" Model="Review" OnValidSubmit="UpdateReview" FormName="edit" Enhance>
+                            <DataAnnotationsValidator />
+                            <ValidationSummary role="alert"/>
+                            <input type="hidden" name="Review.Id" value="@Review.Id" />
 
-                <div class="mb-3">
-                    <label for="title" class="form-label">Title:</label>
-                    <InputText id="title" @bind-Value="Review.Title" class="form-control" />
-                    <ValidationMessage For="() => Review.Title" class="text-danger" />
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title:</label>
+                                <InputText id="title" @bind-Value="Review.Title" class="form-control" />
+                                <ValidationMessage For="() => Review.Title" class="text-danger" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="content" class="form-label">Content:</label>
+                                <InputTextArea id="content" @bind-Value="Review.Content" class="form-control" rows="5" />
+                                <ValidationMessage For="() => Review.Content" class="text-danger" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="category" class="form-label">Category:</label>
+                                <InputText id="category" @bind-Value="Review.Category" class="form-control" />
+                                <ValidationMessage For="() => Review.Category" class="text-danger" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="rating" class="form-label">Rating:</label>
+                                <InputNumber id="rating" @bind-Value="Review.Rating" class="form-control" min="1" max="5" />
+                                <ValidationMessage For="() => Review.Rating" class="text-danger" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="datecreated" class="form-label">DateCreated:</label>
+                                <InputDate id="datecreated" @bind-Value="Review.DateCreated" class="form-control" disabled />
+                                <ValidationMessage For="() => Review.DateCreated" class="text-danger" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="dateupdated" class="form-label">DateUpdated:</label>
+                                <InputDate id="dateupdated" @bind-Value="Review.DateUpdated" class="form-control" />
+                                <ValidationMessage For="() => Review.DateUpdated" class="text-danger" />
+                            </div>
+
+                            @* Persist the user id but show the user's display name (read-only) *@
+                            <input type="hidden" name="Review.UserId" value="@Review.UserId" />
+                            <div class="mb-3">
+                                <label for="userDisplay" class="form-label">User</label>
+                                <input id="userDisplay" class="form-control" value="@AuthorDisplay" disabled />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="productid" class="form-label">Product:</label>
+                                <InputNumber id="productid" @bind-Value="Review.ProductId" class="form-control" />
+                                <ValidationMessage For="() => Review.ProductId" class="text-danger" />
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </EditForm>
+                    </div>
                 </div>
-
-                <div class="mb-3">
-                    <label for="content" class="form-label">Content:</label>
-                    <InputText id="content" @bind-Value="Review.Content" class="form-control" />
-                    <ValidationMessage For="() => Review.Content" class="text-danger" />
+            }
+            else
+            {
+                <div class="alert alert-danger">
+                    <h4>Access Denied</h4>
+                    <p>You are not authorized to edit this review. Only the review creator can make edits.</p>
+                    <a href="/reviews" class="btn btn-primary">Back to Reviews</a>
                 </div>
-
-                <div class="mb-3">
-                    <label for="category" class="form-label">Category:</label>
-                    <InputText id="category" @bind-Value="Review.Category" class="form-control" />
-                    <ValidationMessage For="() => Review.Category" class="text-danger" />
-                </div>
-
-                <div class="mb-3">
-                    <label for="rating" class="form-label">Rating:</label>
-                    <InputNumber id="rating" @bind-Value="Review.Rating" class="form-control" />
-                    <ValidationMessage For="() => Review.Rating" class="text-danger" />
-                </div>
-
-                <div class="mb-3">
-                    <label for="datecreated" class="form-label">DateCreated:</label>
-                    <InputDate id="datecreated" @bind-Value="Review.DateCreated" class="form-control" />
-                    <ValidationMessage For="() => Review.DateCreated" class="text-danger" />
-                </div>
-
-                <div class="mb-3">
-                    <label for="dateupdated" class="form-label">DateUpdated:</label>
-                    <InputDate id="dateupdated" @bind-Value="Review.DateUpdated" class="form-control" />
-                    <ValidationMessage For="() => Review.DateUpdated" class="text-danger" />
-                </div>
-
-                @* Persist the user id but show the user's display name (read-only) *@
-                <input type="hidden" name="Review.UserId" value="@Review.UserId" />
-                <div class="mb-3">
-                    <label for="userDisplay" class="form-label">User</label>
-                    <input id="userDisplay" class="form-control" value="@AuthorDisplay" disabled />
-                </div>
-
-                <div class="mb-3">
-                    <label for="productid" class="form-label">Product:</label>
-                    <InputNumber id="productid" @bind-Value="Review.ProductId" class="form-control" />
-                    <ValidationMessage For="() => Review.ProductId" class="text-danger" />
-                </div>
-
-                <button type="submit" class="btn btn-primary">Save</button>
-            </EditForm>
-        </div>
-    </div>
+            }
+        </Authorized>
+        <NotAuthorized>
+            <div class="alert alert-warning">
+                <h4>Please Log In</h4>
+                <p>You must be logged in to edit reviews.</p>
+                <a href="/Account/Login" class="btn btn-primary">Log In</a>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
 }
 
 <div>
@@ -94,6 +121,8 @@ else
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
+
+        // Load the review
         Review ??= await context.Review.FirstOrDefaultAsync(m => m.Id == Id);
 
         if (Review is null)
@@ -105,22 +134,36 @@ else
         // load author display name (Identity users are in the DbContext.Users DbSet)
         if (!string.IsNullOrEmpty(Review.UserId))
         {
-            var user = await context.Users.AsNoTracking()
+            var author = await context.Users.AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Id == Review.UserId);
-            if (user is not null)
+            if (author is not null)
             {
-                AuthorDisplay = string.IsNullOrWhiteSpace(user.FirstName) && string.IsNullOrWhiteSpace(user.LastName)
-                    ? user.UserName ?? "Unknown"
-                    : $"{user.FirstName} {user.LastName}".Trim();
+                AuthorDisplay = string.IsNullOrWhiteSpace(author.FirstName) && string.IsNullOrWhiteSpace(author.LastName)
+                    ? author.UserName ?? "Unknown"
+                    : $"{author.FirstName} {author.LastName}".Trim();
             }
         }
     }
 
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task UpdateReview()
     {
         using var context = DbFactory.CreateDbContext();
+        
+        // Get current user ID for verification
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        // Verify ownership before updating (security best practice)
+        var existingReview = await context.Review.FindAsync(Review!.Id);
+        if (existingReview == null || existingReview.UserId != currentUserId)
+        {
+            NavigationManager.NavigateTo("/reviews");
+            return;
+        }
+
+        // Update the DateUpdated to current time
+        Review.DateUpdated = DateTime.Now;
+
         context.Attach(Review!).State = EntityState.Modified;
 
         try

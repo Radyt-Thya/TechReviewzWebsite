@@ -2,30 +2,30 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Localization;
 using TechReviewzWebsite.Components;
 using TechReviewzWebsite.Components.Account;
 using TechReviewzWebsite.Data;
 using TechReviewzWebsite.Domain;
 using TechReviewzWebsite.Services;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContextFactory<TechReviewzWebsiteContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("TechReviewzWebsiteContext") ?? throw new InvalidOperationException("Connection string 'TechReviewzWebsiteContext' not found.")));
 
-builder.Services.AddQuickGridEntityFrameworkAdapter();
+// Add localization services
+builder.Services.AddLocalization(options => options.ResourcesPath = "Locales");
 
+builder.Services.AddQuickGridEntityFrameworkAdapter();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddCascadingAuthenticationState();
-
 builder.Services.AddScoped<IdentityUserAccessor>();
-
 builder.Services.AddScoped<IdentityRedirectManager>();
-
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
 builder.Services.AddAuthentication(options =>
@@ -43,10 +43,8 @@ builder.Services.AddIdentityCore<TechReviewzWebsiteUser>(options => options.Sign
 
 builder.Services.AddSingleton<IEmailSender<TechReviewzWebsiteUser>, IdentityNoOpEmailSender>();
 
-// Register antiforgery and set HeaderName to match the header your JS includes.
 builder.Services.AddAntiforgery(options =>
 {
-    // JS includes header "RequestVerificationToken" — keep this name or change JS accordingly
     options.HeaderName = "RequestVerificationToken";
 });
 
@@ -56,25 +54,64 @@ builder.Services.AddSingleton<TranslationStateService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure supported cultures based on your Locales folder
+string[] supportedCultures = [
+    "en-US", // English (United States)
+    "en-GB", // English (United Kingdom)
+    "ar",    // Arabic
+    "ar-AE", // Arabic (United Arab Emirates)
+    "ca",    // Catalan
+    "cs",    // Czech
+    "da",    // Danish
+    "de",    // German
+    "el-GR", // Greek (Greece)
+    "es",    // Spanish
+    "fa",    // Persian
+    "fi",    // Finnish
+    "fr",    // French
+    "fr-CH", // French (Switzerland)
+    "he",    // Hebrew
+    "hi-IN", // Hindi (India)
+    "hr",    // Croatian
+    "hu",    // Hungarian
+    "id",    // Indonesian
+    "it",    // Italian
+    "ja",    // Japanese
+    "ko",    // Korean
+    "ms",    // Malay
+    "nb",    // Norwegian Bokmål
+    "nl",    // Dutch
+    "pl",    // Polish
+    "pt",    // Portuguese
+    "pt-BR", // Portuguese (Brazil)
+    "ro",    // Romanian
+    "ru",    // Russian
+    "sk",    // Slovak
+    "sv",    // Swedish
+    "th",    // Thai
+    "tr",    // Turkish
+    "vi",    // Vietnamese
+    "zh"     // Chinese
+];
+
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture(supportedCultures[0])
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+
+app.UseRequestLocalization(localizationOptions);
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
     app.UseMigrationsEndPoint();
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
-
-// IMPORTANT: register the auth middlewares so endpoint metadata like RequireAuthorization() works
 app.UseAuthentication();
 app.UseAuthorization();
-
-// Antiforgery middleware must be registered after authentication/authorization and before endpoint routing.
-// This satisfies endpoints that carry antiforgery metadata (Razor Components root, forms, etc.)
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
@@ -82,13 +119,11 @@ app.MapRazorComponents<App>()
 
 app.MapAdditionalIdentityEndpoints();
 
-// Minimal API to handle follow actions from client-side JS.
-// This avoids depending on the Blazor circuit for the Follow button.
+// Follow/Unfollow endpoints (keep existing)
 app.MapPost("/api/follow", async (HttpContext http,
                                   IDbContextFactory<TechReviewzWebsiteContext> dbFactory,
                                   IdentityUserAccessor userAccessor) =>
 {
-    // simple DTO for request body
     var dto = await http.Request.ReadFromJsonAsync<FollowRequest>();
     if (dto is null || string.IsNullOrWhiteSpace(dto.TargetUsername))
     {
@@ -103,7 +138,6 @@ app.MapPost("/api/follow", async (HttpContext http,
 
     var currentUsername = user.UserName!;
 
-    // prevent following self
     if (string.Equals(currentUsername, dto.TargetUsername, StringComparison.OrdinalIgnoreCase))
     {
         return Results.BadRequest(new { success = false, error = "Cannot follow yourself" });
@@ -134,7 +168,6 @@ app.MapPost("/api/follow", async (HttpContext http,
 
 }).RequireAuthorization();
 
-// Minimal API to handle unfollow actions from client-side JS.
 app.MapPost("/api/unfollow", async (HttpContext http,
                                     IDbContextFactory<TechReviewzWebsiteContext> dbFactory,
                                     IdentityUserAccessor userAccessor) =>
@@ -155,14 +188,12 @@ app.MapPost("/api/unfollow", async (HttpContext http,
 
     using var ctx = dbFactory.CreateDbContext();
 
-    // find follow connections that represent "current user follows target"
     var followEntries = await ctx.Connection
         .Where(c => c.Username == currentUsername && c.TargetUsername == dto.TargetUsername && c.Relation == "Follow")
         .ToListAsync();
 
     if (!followEntries.Any())
     {
-        // nothing to remove
         return Results.Ok(new { success = true, already = true });
     }
 
@@ -173,7 +204,6 @@ app.MapPost("/api/unfollow", async (HttpContext http,
 
 }).RequireAuthorization();
 
-// add the minimal endpoint to return a fresh antiforgery request token and set cookie
 app.MapGet("/antiforgery/token", (HttpContext http, IAntiforgery antiforgery) =>
 {
     var tokens = antiforgery.GetAndStoreTokens(http);
