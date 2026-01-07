@@ -1,67 +1,111 @@
 ﻿@page "/StaffHome"
-@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using TechReviewzWebsite.Data
+@using TechReviewzWebsite.Domain
+@inject TechReviewzWebsiteContext _context
 
-<div class="staff-main">
-    <div class="staff-container">
+<PageTitle>Staff Dashboard</PageTitle>
+<h1>Staff Home</h1>
 
-        <div class="heading">
-            <h1><b>Staff Home</b></h1>
+@if (dashboardStats is null)
+{
+    <p>Loading stats...</p>
+}
+else
+{
+    <div class="dash-grid">
+        <div class="stat-card">
+            <div class="label">Total Users</div>
+            <div class="value">@dashboardStats.TotalUsers</div>
         </div>
 
-        <!-- Dashboard -->
-        <section class="panel">
-            <h2 class="panel-title">Dashboard</h2>
+        <div class="stat-card">
+            <div class="label">Total Products</div>
+            <div class="value">@dashboardStats.TotalProducts</div>
+        </div>
 
-            <div class="stats-grid">
-                <div class="card stat-card">
-                    <div class="muted">Users Total</div>
-                    <div class="stat-number">55</div>
-                </div>
+        <div class="stat-card">
+            <div class="label">Total Reviews</div>
+            <div class="value">@dashboardStats.TotalReviews</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="label">Total Comments</div>
+            <div class="value">@dashboardStats.TotalComments</div>
+        </div>
+    </div>
+}
+
+
 
                 <div class="card stat-card">
                     <div class="muted">New Users</div>
                     <div class="stat-number">3</div>
                 </div>
 
-                <div class="card stat-card">
-                    <div class="muted">Active Users</div>
-                    <div class="stat-number">23</div>
-                </div>
-            </div>
+@code {
+    public class StaffDashboardService
+    {
+        private readonly IDbContextFactory<TechReviewzWebsiteContext> _dbFactory;
+        private readonly UserManager<IdentityUser> _userManager;
 
-            <div class="charts-grid">
-                <div class="card chart-card">
-                    <div class="card-title">Target</div>
-                    <div class="placeholder"></div>
-                </div>
+        public StaffDashboardService(
+            IDbContextFactory<TechReviewzWebsiteContext> dbFactory,
+            UserManager<IdentityUser> userManager)
+        {
+            _dbFactory = dbFactory;
+            _userManager = userManager;
+        }
 
-                <div class="card chart-card">
-                    <div class="card-title">Most Active Account Types</div>
-                    <div class="placeholder"></div>
-                </div>
+        public async Task<Domain.StaffDashboardStats> GetStatsAsync()
+        {
+            await using var db = await _dbFactory.CreateDbContextAsync();
 
-                <div class="card chart-card wide">
-                    <div class="card-title">Pending reviews</div>
-                    <div class="placeholder"></div>
-                </div>
-            </div>
-        </section>
+            // Identity users count (often easiest via UserManager)
+            var totalUsers = _userManager.Users.Count(); // IQueryable -> DB count
 
-        <!-- Add Products -->
-        <div class="panel">
-            <h2 class="panel-title">Add Products</h2>
-            <a href="/reviews">Add product</a>
-                </div>
-          
-        </div>
+            // Replace these with YOUR entity names (Products, Reviews, etc.)
+            var totalProducts = await db.Product.CountAsync();
+            var totalReviews  = await db.Review.CountAsync();
 
-        <!-- Feedback -->
-        <section class="panel">
-            <h2 class="panel-title">Feedback</h2>
-            <div class="card feedback-card">
-                <div class="placeholder tall"></div>
-            </div>
-        </section>
+      
 
-    </div>
+            var avgRating = await db.Review
+                .Where(r => r.Rating != null)
+                .AverageAsync(r => (double?)r.Rating) ?? 0;
 
+            var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
+            var newUsers7d = _userManager.Users.Count(u => u.LockoutEnd == null /* ignore */); 
+            // If you have a CreatedAt column for users, use that instead:
+            // var newUsers7d = await db.Users.CountAsync(u => u.CreatedAt >= sevenDaysAgo);
+
+            return new Domain.StaffDashboardStats
+            {
+                TotalUsers = totalUsers,
+                TotalProducts = totalProducts,
+                TotalReviews = totalReviews,
+                TotalComments = await db.Comments.CountAsync(),
+                // Add other stats here
+            };
+        }
+    }
+
+    private StaffDashboardStats dashboardStats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var totalComments = await _context.Comments.CountAsync();
+        var totalUsers = await _context.Users.CountAsync();
+        var totalProducts = await _context.Product.CountAsync();
+        var totalReviews = await _context.Review.CountAsync();
+
+        dashboardStats = new StaffDashboardStats
+        {
+            TotalComments = totalComments,
+            TotalUsers = totalUsers,
+            TotalProducts = totalProducts,
+            TotalReviews = totalReviews
+        };
+    }
+}

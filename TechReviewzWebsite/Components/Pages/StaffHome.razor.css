@@ -1,0 +1,25 @@
+﻿.dash-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid #e6e6e6;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.06);
+}
+
+.label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 6px;
+}
+
+.value {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
