@@ -18,6 +18,7 @@
     <PropertyColumn Property="review => review.Title" />
     <PropertyColumn Property="review => review.Content" />
     <PropertyColumn Property="review => review.Category" />
+    <PropertyColumn Property="review => review.Tag" />
     <PropertyColumn Property="review => review.Rating" />
     <PropertyColumn Property="review => review.DateCreated" />
     <PropertyColumn Property="review => review.DateUpdated" />
@@ -25,7 +26,6 @@
     <TemplateColumn Context="review" Title="User">
         <div>@GetAuthorDisplay(review.UserId)</div>
     </TemplateColumn>
-    <PropertyColumn Property="review => review.ProductId" />
 
     <TemplateColumn Context="review">
         <a href="@($"reviews/edit?id={review.Id}")">Edit</a> |

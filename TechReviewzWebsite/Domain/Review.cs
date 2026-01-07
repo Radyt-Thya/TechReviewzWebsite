@@ -7,6 +7,7 @@ namespace TechReviewzWebsite.Domain
         public string? Title { get; set; }
         public string? Content { get; set; }
         public string? Category { get; set; }
+        public string? Tag { get; set; }
         public int Rating { get; set; }
         public DateTime DateCreated { get; set; }
         public DateTime DateUpdated { get; set; }

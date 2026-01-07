@@ -46,24 +46,51 @@ else
 
                             <div class="mb-3">
                                 <label for="category" class="form-label">Category:</label>
-                                <InputText id="category" @bind-Value="Review.Category" class="form-control" />
+                                <InputSelect id="category" @bind-Value="Review.Category" class="form-select">
+                                    <option value="">-- Select Category --</option>
+                                    @foreach (var c in Categories)
+                                    {
+                                        <option value="@c">@c</option>
+                                    }
+                                </InputSelect>                                
                                 <ValidationMessage For="() => Review.Category" class="text-danger" />
                             </div>
 
                             <div class="mb-3">
+                                <label for="tag" class="form-label">Tag:</label>
+                                <InputSelect id="tag" @bind-Value="Review.Tag" class="form-select">
+                                    <option value="">-- Select Tag --</option>
+                                    @foreach (var t in Tag)
+                                    {
+                                        <option value="@t">@t</option>
+                                    }
+                                </InputSelect>                                
+                                <ValidationMessage For="() => Review.Tag" class="text-danger" />
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="rating" class="form-label">Rating:</label>
-                                <InputNumber id="rating" @bind-Value="Review.Rating" class="form-control" min="1" max="5" />
+                                <InputSelect id="rating" @bind-Value="Review.Rating" class="form-control">
+                                    <option value="0">-- Select Rating --</option>
+                                    @if (Rating?.Count > 0)
+                                    {
+                                        foreach (var r in Rating)
+                                        {
+                                            <option value="@r">@r</option>
+                                        }
+                                    }
+                                </InputSelect>                                
                                 <ValidationMessage For="() => Review.Rating" class="text-danger" />
                             </div>
 
                             <div class="mb-3">
-                                <label for="datecreated" class="form-label">DateCreated:</label>
-                                <InputDate id="datecreated" @bind-Value="Review.DateCreated" class="form-control" disabled />
+                                <label for="datecreated" class="form-label">Date Created:</label>
+                                <InputDate id="datecreated" @bind-Value="Review.DateCreated" class="form-control" />
                                 <ValidationMessage For="() => Review.DateCreated" class="text-danger" />
                             </div>
 
                             <div class="mb-3">
-                                <label for="dateupdated" class="form-label">DateUpdated:</label>
+                                <label for="dateupdated" class="form-label">Date Updated:</label>
                                 <InputDate id="dateupdated" @bind-Value="Review.DateUpdated" class="form-control" />
                                 <ValidationMessage For="() => Review.DateUpdated" class="text-danger" />
                             </div>
@@ -77,7 +104,16 @@ else
 
                             <div class="mb-3">
                                 <label for="productid" class="form-label">Product:</label>
-                                <InputNumber id="productid" @bind-Value="Review.ProductId" class="form-control" />
+                                <InputSelect id="productid" @bind-Value="Review.ProductId" class="form-control">
+                                    <option value="0">-- Select Product --</option>
+                                    @if (Products?.Count > 0)
+                                    {
+                                        foreach (var p in Products)
+                                        {
+                                            <option value="@p.Id">@p.Name</option>
+                                        }
+                                    }
+                                </InputSelect>
                                 <ValidationMessage For="() => Review.ProductId" class="text-danger" />
                             </div>
 
@@ -110,17 +146,53 @@ else
 </div>
 
 @code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
     [SupplyParameterFromQuery]
     private int Id { get; set; }
 
     [SupplyParameterFromForm]
     private Review? Review { get; set; }
 
+    private readonly List<string> Categories = new()
+    {
+        "Laptops",
+        "Smartphones & Tablets",
+        "Personal Computer (PC)",
+        "PC Components",
+        "Peripherals",
+        "Wearables",
+        "Home Appliances"
+    };
+
+    private readonly List<string> Tag = new()
+    {
+        "Office/School",
+        "Gaming",
+        "Home Entertaintment",
+        "Fitness and Health",
+        "Content Creation",
+        "Streaming"
+    };
+
+    private readonly List<string> Rating = new()
+    {
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+    };
+
+    private IList<Product>? Products;
+
     private string AuthorDisplay { get; set; } = "Unknown";
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
+        Products = await context.Product.ToListAsync();
 
         // Load the review
         Review ??= await context.Review.FirstOrDefaultAsync(m => m.Id == Id);
@@ -154,7 +226,7 @@ else
         var currentUserId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         
         // Verify ownership before updating (security best practice)
-        var existingReview = await context.Review.FindAsync(Review!.Id);
+        var existingReview = await context.Review.AsNoTracking().FirstOrDefaultAsync(r => r.Id == Review!.Id);
         if (existingReview == null || existingReview.UserId != currentUserId)
         {
             NavigationManager.NavigateTo("/reviews");
@@ -162,9 +234,10 @@ else
         }
 
         // Update the DateUpdated to current time
-        Review.DateUpdated = DateTime.Now;
+        Review!.DateUpdated = DateTime.Now;
 
-        context.Attach(Review!).State = EntityState.Modified;
+        // Attach and mark as modified
+        context.Attach(Review).State = EntityState.Modified;
 
         try
         {
@@ -172,7 +245,7 @@ else
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!ReviewExists(Review!.Id))
+            if (!ReviewExists(Review.Id))
             {
                 NavigationManager.NavigateTo("notfound");
             }

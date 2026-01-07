@@ -1,5 +1,31 @@
-﻿<h3>Newsletter</h3>
+﻿@* <h3>Newsletter</h3>
+@using System;
+@using RestSharp; // RestSharp v112.1.0
+@using RestSharp.Authenticators;
+@using System.Threading;
+@using System.Threading.Tasks;
+@namespace MailGunExamples
+{
+  class SendSimpleMessage
+  {
+    public static async Task<RestResponse> Send()
+    {
+        var options = new RestClientOptions("https://api.mailgun.net")
+        {
+            Authenticator = new HttpBasicAuthenticator("api", Environment.GetEnvironmentVariable("API_KEY") ?? '4fd2c07c6be34a784a6c763beb26e800-42b8ce75-a0a067d7')
+        };
 
+        var client = new RestClient(options);
+        var request = new RestRequest("/v3/sandbox555de057d71843b4ba2ef7f3db05977b.mailgun.org/messages", Method.Post);
+        request.AlwaysMultipartFormData = true;
+        request.AddParameter("from", "Mailgun Sandbox <postmaster@sandbox555de057d71843b4ba2ef7f3db05977b.mailgun.org>");
+        request.AddParameter("to", "Zhiyan <2400712b@student.tp.edu.sg>");
+        request.AddParameter("subject", "Hello Zhiyan");
+        request.AddParameter("text", "Congratulations Zhiyan, you just sent an email with Mailgun! You are truly awesome!");
+        return await client.ExecuteAsync(request);
+    }
+  }
+}
 @code {
 
-}
+} *@

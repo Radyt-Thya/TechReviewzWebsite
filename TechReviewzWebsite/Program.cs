@@ -6,6 +6,9 @@ using TechReviewzWebsite.Components;
 using TechReviewzWebsite.Components.Account;
 using TechReviewzWebsite.Data;
 using TechReviewzWebsite.Domain;
+using TechReviewzWebsite.Services;
+using System.Net.Http.Headers;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContextFactory<TechReviewzWebsiteContext>(options =>

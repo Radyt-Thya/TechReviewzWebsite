@@ -1,2 +1,166 @@
-﻿body {
+﻿.faq-page {
+    padding: 24px;
+    z-index: -1;
+}
+
+.faq-title {
+    font-size: 34px;
+    font-weight: 800;
+    margin: 0 0 16px 0;
+}
+
+.faq-card {
+    background: #f3f5f8;
+    border-radius: 6px;
+    padding: 36px 18px 42px;
+}
+
+.faq-header {
+    text-align: center;
+    margin-bottom: 26px;
+}
+
+.faq-kicker {
+    font-size: 12px;
+    letter-spacing: .12em;
+    font-weight: 800;
+    color: #1f4aa8; /* subtle blue like screenshot */
+    margin-bottom: 8px;
+}
+
+.faq-heading {
+    font-size: 34px;
+    font-weight: 800;
+    color: #1d232b;
+}
+
+.faq-list {
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.faq-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1px solid #e3e8ef;
+    border-radius: 2px;
+    padding: 14px 16px;
+    margin: 10px 0;
+    cursor: pointer;
+    text-align: left;
+}
+
+.faq-question {
+    font-weight: 700;
+    color: #1d232b;
+    font-size: 15px;
+}
+
+.faq-icon {
+    width: 28px;
+    height: 28px;
+    position: relative;
+    flex: 0 0 28px;
+}
+
+    .faq-icon .bar {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 14px;
+        height: 2px;
+        background: #1d232b;
+        transform: translate(-50%, -50%);
+    }
+
+    .faq-icon .vertical {
+        transform: translate(-50%, -50%) rotate(90deg);
+        transition: opacity .15s ease;
+    }
+
+.faq-item.open .faq-icon .vertical {
+    opacity: 0;
+}
+
+.faq-answer-wrap {
+    max-width: 760px;
+    margin: -6px auto 10px;
+    display: none;
+}
+
+    .faq-answer-wrap.show {
+        display: block;
+    }
+
+.faq-answer {
+    background: #ffffff;
+    border: 1px solid #e3e8ef;
+    border-top: none;
+    padding: 14px 16px;
+}
+
+/* Newsletter container: 2 columns */
+.newsletter {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background-color: #D9D9D9;
+    margin-top: 40px;
+    min-height: 500px;
+}
+
+/* Left column */
+.panel2_1 {
+    padding: 100px;
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+}
+
+/* Right column */
+.panel2_2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.panel2_img {
+    width: min(700px, 90%);
+    height: 400px;
+    object-fit: cover;
+    background-color: white;
+    box-shadow: 0 30px 50px rgba(0,0,0,.15);
+}
+
+/* Footer */
+.panel3 {
+    background-color: white;
+    text-align: center;
+    padding: 30px;
+    font-weight: bold;
+}
+
+.panel4 {
+    background-color: #912729;
+    text-align: center;
+    padding: 15px;
+    font-weight: bold;
+}
+
+.panel4_txt {
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .newsletter {
+        grid-template-columns: 1fr;
+    }
+
+    .panel2_1 {
+        padding: 40px 24px;
+    }
 }

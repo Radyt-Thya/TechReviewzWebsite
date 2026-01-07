@@ -7,6 +7,101 @@
 @inject NavigationManager NavigationManager
 @inject IdentityUserAccessor UserAccessor
 
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>Review</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Review" OnValidSubmit="AddReview" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="title" class="form-label">Title:</label> 
+                <InputText id="title" @bind-Value="Review.Title" class="form-control" /> 
+                <ValidationMessage For="() => Review.Title" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="content" class="form-label">Content:</label> 
+                <InputText id="content" @bind-Value="Review.Content" class="form-control" /> 
+                <ValidationMessage For="() => Review.Content" class="text-danger" /> 
+            </div>
+            <div class="mb-3">
+                <label for="category" class="form-label">Category:</label>
+                <InputSelect id="category" @bind-Value="Review.Category" class="form-select">
+                    <option value="">-- Select Category --</option>
+                    @foreach (var c in Categories)
+                    {
+                        <option value="@c">@c</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => Review.Category" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label for="tag" class="form-label">Tag:</label>
+                <InputSelect id="tag" @bind-Value="Review.Tag" class="form-select">
+                    <option value="">-- Select Tag --</option>
+                    @foreach (var t in Tag)
+                    {
+                        <option value="@t">@t</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => Review.Tag" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label for="rating" class="form-label">Rating:</label>
+                <InputSelect id="rating" @bind-Value="Review.Rating" class="form-control">
+                    <option value="0">-- Select Rating --</option>
+                    @if (Rating?.Count > 0)
+                    {
+                        foreach (var r in Rating)
+                        {
+                            <option value="@r">@r</option>
+                        }
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => Review.Rating" class="text-danger" /> 
+            </div>        
+            <div class="mb-3" hidden>
+                <label for="datecreated" class="form-label">Date Created:</label> 
+                <InputDate id="datecreated" @bind-Value="Review.DateCreated" class="form-control" /> 
+                <ValidationMessage For="() => Review.DateCreated" class="text-danger" /> 
+            </div>        
+            <div class="mb-3" hidden>
+                <label for="dateupdated" class="form-label">Date Updated:</label> 
+                <InputDate id="dateupdated" @bind-Value="Review.DateUpdated" class="form-control" /> 
+                <ValidationMessage For="() => Review.DateUpdated" class="text-danger" /> 
+            </div>        
+
+            @* Product selector *@
+            <div class="mb-3">
+                <label for="productid" class="form-label">Product:</label>
+                <InputSelect id="productid" @bind-Value="Review.ProductId" class="form-control">
+                    <option value="0">-- Select Product --</option>
+                    @if (Products?.Count > 0)
+                    {
+                        foreach (var p in Products)
+                        {
+                            <option value="@p.Id">@p.Name</option>
+                        }
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => Review.ProductId" class="text-danger" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/reviews">Back to List</a>
+</div>
+
 @code {
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -23,6 +118,16 @@
         "Peripherals",
         "Wearables",
         "Home Appliances"
+    };
+
+    private readonly List<string> Tag = new()
+    {
+        "Office/School",
+        "Gaming",
+        "Home Entertaintment",
+        "Fitness and Health",
+        "Content Creation",
+        "Streaming"
     };
 
     private readonly List<string> Rating = new()
@@ -69,8 +174,7 @@
     {
         using var context = DbFactory.CreateDbContext();
 
-        //Set the DateCreated and DateUpdated fields to the current date and time.
-        Review.DateCreated = DateTime.Now;
+        //Set the DateUpdated field to the current date and time.
         Review.DateUpdated = DateTime.Now;
 
         context.Review.Add(Review);
@@ -78,85 +182,3 @@
         NavigationManager.NavigateTo("/reviews");
     }
 }
-
-<PageTitle>Create</PageTitle>
-
-<h1>Create</h1>
-
-<h2>Review</h2>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <EditForm method="post" Model="Review" OnValidSubmit="AddReview" FormName="create" Enhance>
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert"/>
-            <div class="mb-3">
-                <label for="title" class="form-label">Title:</label> 
-                <InputText id="title" @bind-Value="Review.Title" class="form-control" /> 
-                <ValidationMessage For="() => Review.Title" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="content" class="form-label">Content:</label> 
-                <InputText id="content" @bind-Value="Review.Content" class="form-control" /> 
-                <ValidationMessage For="() => Review.Content" class="text-danger" /> 
-            </div>
-            <div class="mb-3">
-                <label for="category" class="form-label">Category:</label>
-                <InputSelect id="category" @bind-Value="Review.Category" class="form-select">
-                    <option value="">-- Select Category --</option>
-                    @foreach (var c in Categories)
-                    {
-                        <option value="@c">@c</option>
-                    }
-                </InputSelect>
-                <ValidationMessage For="() => Review.Category" class="text-danger" />
-            </div>
-            <div class="mb-3">
-                <label for="rating" class="form-label">Rating:</label>
-                <InputSelect id="rating" @bind-Value="Review.Rating" class="form-control">
-                    <option value="0">-- Select Rating --</option>
-                    @if (Rating?.Count > 0)
-                    {
-                        foreach (var r in Rating)
-                        {
-                            <option value="@r">@r</option>
-                        }
-                    }
-                </InputSelect>
-                <ValidationMessage For="() => Review.Rating" class="text-danger" /> 
-            </div>        
-            <div class="mb-3" hidden>
-                <label for="datecreated" class="form-label">DateCreated:</label> 
-                <InputDate id="datecreated" @bind-Value="Review.DateCreated" class="form-control" /> 
-                <ValidationMessage For="() => Review.DateCreated" class="text-danger" /> 
-            </div>        
-            <div class="mb-3" hidden>
-                <label for="dateupdated" class="form-label">DateUpdated:</label> 
-                <InputDate id="dateupdated" @bind-Value="Review.DateUpdated" class="form-control" /> 
-                <ValidationMessage For="() => Review.DateUpdated" class="text-danger" /> 
-            </div>        
-
-            @* Product selector *@
-            <div class="mb-3">
-                <label for="productid" class="form-label">Product:</label>
-                <InputSelect id="productid" @bind-Value="Review.ProductId" class="form-control">
-                    <option value="0">-- Select Product --</option>
-                    @if (Products?.Count > 0)
-                    {
-                        foreach (var p in Products)
-                        {
-                            <option value="@p.Id">@p.Name</option>
-                        }
-                    }
-                </InputSelect>
-                <ValidationMessage For="() => Review.ProductId" class="text-danger" />
-            </div>
-
-            <button type="submit" class="btn btn-primary">Create</button>
-        </EditForm>
-    </div>
-</div>
-
-<div>
-    <a href="/reviews">Back to List</a>
-</div>
