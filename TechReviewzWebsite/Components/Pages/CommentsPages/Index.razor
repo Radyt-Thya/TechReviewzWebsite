@@ -35,11 +35,18 @@
 
 @code {
     private TechReviewzWebsiteContext context = default!;
+    private IList<Comments> CommentsList = new List<Comments>();
 
     protected override void OnInitialized()
     {
         context = DbFactory.CreateDbContext();
     }
-
+    protected override async Task OnInitializedAsync()
+    {
+        await using var ctx = DbFactory.CreateDbContext();
+        CommentsList = await ctx.Comments.AsNoTracking()
+            .OrderByDescending(c => c.DateCreated)
+            .ToListAsync();
+    }
     public async ValueTask DisposeAsync() => await context.DisposeAsync();
 }

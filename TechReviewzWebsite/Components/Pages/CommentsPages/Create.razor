@@ -1,64 +1,73 @@
-﻿@page "/comments/create"
+﻿@page "/reviews/{ReviewId:int}/comments/create"
 @using Microsoft.EntityFrameworkCore
+@using TechReviewzWebsite.Components.Account
 @using TechReviewzWebsite.Domain
+@using TechReviewzWebsite.Data
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject IdentityUserAccessor UserAccessor
 
-<PageTitle>Create</PageTitle>
+<PageTitle>Add Comment</PageTitle>
 
-<h1>Create</h1>
-
-<h2>Comments</h2>
+<h1>Add Comment</h1>
 <hr />
+
 <div class="row">
-    <div class="col-md-4">
-        <EditForm method="post" Model="Comments" OnValidSubmit="AddComments" FormName="create" Enhance>
+    <div class="col-md-6">
+        <EditForm Model="Comments" 
+            OnValidSubmit="AddComments"
+            FormName = "CreateComments" 
+            Enhance>
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert"/>
+            <ValidationSummary class="text-danger" role="alert" />
+
             <div class="mb-3">
-                <label for="content" class="form-label">Content:</label> 
-                <InputText id="content" @bind-Value="Comments.Content" class="form-control" /> 
-                <ValidationMessage For="() => Comments.Content" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="datecreated" class="form-label">DateCreated:</label> 
-                <InputDate id="datecreated" @bind-Value="Comments.DateCreated" class="form-control" /> 
-                <ValidationMessage For="() => Comments.DateCreated" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="dateupdated" class="form-label">DateUpdated:</label> 
-                <InputDate id="dateupdated" @bind-Value="Comments.DateUpdated" class="form-control" /> 
-                <ValidationMessage For="() => Comments.DateUpdated" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="userid" class="form-label">UserId:</label> 
-                <InputNumber id="userid" @bind-Value="Comments.UserId" class="form-control" /> 
-                <ValidationMessage For="() => Comments.UserId" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="reviewid" class="form-label">ReviewId:</label> 
-                <InputNumber id="reviewid" @bind-Value="Comments.ReviewId" class="form-control" /> 
-                <ValidationMessage For="() => Comments.ReviewId" class="text-danger" /> 
-            </div>        
-            <button type="submit" class="btn btn-primary">Create</button>
+                <label class="form-label">Content</label>
+                <InputText @bind-Value="Comments.Content" class="form-control" />
+                <ValidationMessage For="() => Comments.Content" class="text-danger" />
+            </div>
+
+            <button class="btn btn-primary" type="submit">Post</button>
+           
         </EditForm>
     </div>
 </div>
 
-<div>
-    <a href="/comments">Back to List</a>
-</div>
+<a class="btn btn-link" href="@($"/reviews/details?id={ReviewId}")">Cancel</a>
 
 @code {
-    [SupplyParameterFromForm]
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+    [Parameter] public int ReviewId { get; set; }
+
     private Comments Comments { get; set; } = new();
 
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    protected override async Task OnInitializedAsync()
+    {
+        await using var context = DbFactory.CreateDbContext();
+
+        Comments.ReviewId = ReviewId;
+
+        var identityUser = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        Comments.UserId = identityUser.Id;
+
+        Comments.DateCreated = DateTime.Now;
+        Comments.DateUpdated = DateTime.Now;
+    }
+
     private async Task AddComments()
     {
-        using var context = DbFactory.CreateDbContext();
+        await using var context = DbFactory.CreateDbContext();
+        Comments.ReviewId = ReviewId;
+        Comments.DateUpdated = DateTime.Now;
+
+        if (string.IsNullOrWhiteSpace(Comments.Content))
+        {
+            return;
+        }
+
         context.Comments.Add(Comments);
         await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/comments");
+
+        NavigationManager.NavigateTo($"/reviews/details?id={ReviewId}");
     }
 }

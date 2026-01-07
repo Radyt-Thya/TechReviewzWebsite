@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TechReviewzWebsite.Data;
 
@@ -11,9 +12,11 @@ using TechReviewzWebsite.Data;
 namespace TechReviewzWebsite.Migrations
 {
     [DbContext(typeof(TechReviewzWebsiteContext))]
-    partial class TechReviewzWebsiteContextModelSnapshot : ModelSnapshot
+    [Migration("20260117003926_FixCommentUserIdType")]
+    partial class FixCommentUserIdType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -254,7 +257,7 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = "3781efa7-66dc-47f0-860f-e506d04102e4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "50e8c2e2-73cb-4d13-91e4-23c5988ed93e",
+                            ConcurrencyStamp = "5ab2d323-f5cf-49d2-bd39-f9afce33979b",
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
                             FirstName = "Admin",
@@ -262,9 +265,9 @@ namespace TechReviewzWebsite.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIzaBXueDscFpU/fBodDxZmQo7+X6LihZe7uZJtL3+xShAJZOzafKmPAFI1IpZ2zzA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEG84ZGzlrf0kNhUsWUY32Jbtr5kvBRDy1IVUSmunjdrrtd29cR/iY6jZ/bcMknCnBg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "9dcda766-9f57-416d-9831-27d0a340cd2f",
+                            SecurityStamp = "d5eab82a-2d7d-4b1d-9823-8a0a8bb24020",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
                         });
@@ -310,7 +313,6 @@ namespace TechReviewzWebsite.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DateCreated")
@@ -402,7 +404,7 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = 1,
                             Brand = "Apple",
-                            DateReleased = new DateTime(2026, 1, 14, 15, 1, 38, 130, DateTimeKind.Local).AddTicks(3834),
+                            DateReleased = new DateTime(2026, 1, 17, 8, 39, 24, 816, DateTimeKind.Local).AddTicks(7650),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Latest Apple smartphone with A15 Bionic chip",
                             Name = "iPhone 13",
@@ -412,7 +414,7 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = 2,
                             Brand = "Samsung",
-                            DateReleased = new DateTime(2026, 1, 14, 15, 1, 38, 130, DateTimeKind.Local).AddTicks(3842),
+                            DateReleased = new DateTime(2026, 1, 17, 8, 39, 24, 816, DateTimeKind.Local).AddTicks(7654),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Flagship Samsung phone with excellent camera",
                             Name = "Samsung Galaxy S21",
@@ -464,8 +466,8 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = 1,
                             Content = "Amazing phone with great features!",
-                            DateCreated = new DateTime(2026, 1, 14, 15, 1, 38, 130, DateTimeKind.Local).AddTicks(3331),
-                            DateUpdated = new DateTime(2026, 1, 14, 15, 1, 38, 130, DateTimeKind.Local).AddTicks(3350),
+                            DateCreated = new DateTime(2026, 1, 17, 8, 39, 24, 816, DateTimeKind.Local).AddTicks(7268),
+                            DateUpdated = new DateTime(2026, 1, 17, 8, 39, 24, 816, DateTimeKind.Local).AddTicks(7293),
                             ProductId = 1,
                             Rating = 5,
                             Title = "samsung review"
@@ -474,8 +476,8 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = 2,
                             Content = "battery life could be better.",
-                            DateCreated = new DateTime(2026, 1, 14, 15, 1, 38, 130, DateTimeKind.Local).AddTicks(3357),
-                            DateUpdated = new DateTime(2026, 1, 14, 15, 1, 38, 130, DateTimeKind.Local).AddTicks(3358),
+                            DateCreated = new DateTime(2026, 1, 17, 8, 39, 24, 816, DateTimeKind.Local).AddTicks(7297),
+                            DateUpdated = new DateTime(2026, 1, 17, 8, 39, 24, 816, DateTimeKind.Local).AddTicks(7299),
                             ProductId = 0,
                             Rating = 4,
                             Title = "Iphone review"

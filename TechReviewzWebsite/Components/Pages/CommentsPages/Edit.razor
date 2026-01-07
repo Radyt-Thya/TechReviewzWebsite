@@ -18,7 +18,10 @@ else
 {
     <div class="row">
         <div class="col-md-4">
-            <EditForm method="post" Model="Comments" OnValidSubmit="UpdateComments" FormName="edit" Enhance>
+            <EditForm method="post" 
+                Model="Comments" 
+                OnValidSubmit="UpdateComments" 
+                FormName="edit" Enhance>
                 <DataAnnotationsValidator />
                 <ValidationSummary role="alert"/>
                 <input type="hidden" name="Comments.Id" value="@Comments.Id" />

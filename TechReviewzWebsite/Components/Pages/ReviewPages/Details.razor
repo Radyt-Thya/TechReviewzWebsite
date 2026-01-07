@@ -36,9 +36,33 @@
             <dt class="col-sm-2">ProductId</dt>
             <dd class="col-sm-10">@review.ProductId</dd>
         </dl>
+        @if (CommentsList is null)
+        {
+            <p>Loading comments...</p>
+        }
+        else if (CommentsList.Count == 0)
+        {
+            <p>No comments yet.</p>
+        }
+        else
+        {
+            <div class="mt-3">
+                @foreach (var c in CommentsList)
+                {
+                    <div class="border rounded p-2 mb-2">
+                        <div>@c.Content</div>
+                        <small class="text-muted">@c.DateCreated</small>
+                    </div>
+                }
+            </div>
+        }
         <div>
             <a href="@($"/reviews/edit?id={review.Id}")">Edit</a> |
-            <a href="@($"/reviews")">Back to List</a>
+            <a href="@($"/reviews")">Back to List</a> |
+            <a href="@($"/reviews/{review.Id}/comments/create")">Write a comment</a>
+
+
+          
         </div>
     }
 </div>
@@ -48,11 +72,18 @@
 
     [SupplyParameterFromQuery]
     private int Id { get; set; }
+    private List<Comments> CommentsList = new();
 
     protected override async Task OnInitializedAsync()
     {
+
         using var context = DbFactory.CreateDbContext();
         review = await context.Review.FirstOrDefaultAsync(m => m.Id == Id);
+
+        CommentsList = await context.Comments
+    .Where(c => c.ReviewId == review.Id)
+    .OrderByDescending(c => c.DateCreated)
+    .ToListAsync();
 
         if (review is null)
         {
