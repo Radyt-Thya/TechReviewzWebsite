@@ -1,41 +1,53 @@
 ﻿@page "/bookmarks"
+@using System.Security.Claims
 @using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.QuickGrid
 @using TechReviewzWebsite.Domain
-@using TechReviewzWebsite.Data
-@implements IAsyncDisposable
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
+@inject AuthenticationStateProvider AuthStateProvider
 
-<PageTitle>Index</PageTitle>
+<h3>My Bookmarks</h3>
 
-<h1>Index</h1>
-
-<p>
-    <a href="bookmarks/create">Create New</a>
-</p>
-
-<QuickGrid Class="table" Items="context.Bookmark">
-    <PropertyColumn Property="bookmark => bookmark.Title" />
-    <PropertyColumn Property="bookmark => bookmark.Rating" />
-    <PropertyColumn Property="bookmark => bookmark.DateCreated" />
-    <PropertyColumn Property="bookmark => bookmark.DateUpdated" />
-    <PropertyColumn Property="bookmark => bookmark.UserId" />
-    <PropertyColumn Property="bookmark => bookmark.ReviewId" />
-
-    <TemplateColumn Context="bookmark">
-        <a href="@($"bookmarks/edit?id={bookmark.Id}")">Edit</a> |
-        <a href="@($"bookmarks/details?id={bookmark.Id}")">Details</a> |
-        <a href="@($"bookmarks/delete?id={bookmark.Id}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid>
+@if (!IsLoggedIn)
+{
+    <p>Please log in.</p>
+}
+else if (Bookmarks.Count == 0)
+{
+    <p>No bookmarks yet.</p>
+}
+else
+{
+    <ul>
+        @foreach (var b in Bookmarks)
+        {
+            <li>
+                <strong>@b.Title</strong> (Rating: @b.Rating)
+            </li>
+        }
+    </ul>
+}
 
 @code {
-    private TechReviewzWebsiteContext context = default!;
+    bool IsLoggedIn;
+    List<Bookmark> Bookmarks = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        context = DbFactory.CreateDbContext();
-    }
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+        IsLoggedIn = user.Identity?.IsAuthenticated == true;
+        if (!IsLoggedIn) return;
+
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrWhiteSpace(userId)) return;
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+
+        Bookmarks = await db.Bookmark
+            .Where(b => b.UserId == userId)
+            .OrderByDescending(b => b.DateCreated)
+            .ToListAsync();
+    }
 }

@@ -15,7 +15,8 @@
     {
         <p><em>Loading...</em></p>
     }
-    else {
+    else
+    {
         <dl class="row">
             <dt class="col-sm-2">Title</dt>
             <dd class="col-sm-10">@review.Title</dd>
@@ -60,9 +61,12 @@
             <a href="@($"/reviews/edit?id={review.Id}")">Edit</a> |
             <a href="@($"/reviews")">Back to List</a> |
             <a href="@($"/reviews/{review.Id}/comments/create")">Write a comment</a>
+            <a class="btn btn-outline-primary" href="@($"/bookmarks/add/{review.Id}")">
+                Bookmark ☆
+            </a>
 
 
-          
+
         </div>
     }
 </div>

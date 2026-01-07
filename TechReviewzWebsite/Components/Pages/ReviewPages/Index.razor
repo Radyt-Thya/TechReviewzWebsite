@@ -22,7 +22,6 @@
     <PropertyColumn Property="review => review.Rating" />
     <PropertyColumn Property="review => review.DateCreated" />
     <PropertyColumn Property="review => review.DateUpdated" />
-    @* User column with header "User" using TemplateColumn Title property *@
     <TemplateColumn Context="review" Title="User">
         <div>@GetAuthorDisplay(review.UserId)</div>
     </TemplateColumn>
@@ -65,3 +64,5 @@
 
     public async ValueTask DisposeAsync() => await context.DisposeAsync();
 }
+
+
