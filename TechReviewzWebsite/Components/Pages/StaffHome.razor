@@ -1,14 +1,67 @@
 ﻿@page "/StaffHome"
-@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
 
-<div class = "background">
-    <div clas ="heading">
-        <h1><b>Staff Home</b></h1>
+<div class="staff-main">
+    <div class="staff-container">
+
+        <div class="heading">
+            <h1><b>Staff Home</b></h1>
+        </div>
+
+        <!-- Dashboard -->
+        <section class="panel">
+            <h2 class="panel-title">Dashboard</h2>
+
+            <div class="stats-grid">
+                <div class="card stat-card">
+                    <div class="muted">Users Total</div>
+                    <div class="stat-number">55</div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="muted">New Users</div>
+                    <div class="stat-number">3</div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="muted">Active Users</div>
+                    <div class="stat-number">23</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="card chart-card">
+                    <div class="card-title">Target</div>
+                    <div class="placeholder"></div>
+                </div>
+
+                <div class="card chart-card">
+                    <div class="card-title">Most Active Account Types</div>
+                    <div class="placeholder"></div>
+                </div>
+
+                <div class="card chart-card wide">
+                    <div class="card-title">Pending reviews</div>
+                    <div class="placeholder"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Add Products -->
+        <div class="panel">
+            <h2 class="panel-title">Add Products</h2>
+            <a href="/reviews">Add product</a>
+                </div>
+          
+        </div>
+
+        <!-- Feedback -->
+        <section class="panel">
+            <h2 class="panel-title">Feedback</h2>
+            <div class="card feedback-card">
+                <div class="placeholder tall"></div>
+            </div>
+        </section>
+
     </div>
-    
-
-
-
-
-</div>
 

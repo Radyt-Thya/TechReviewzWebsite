@@ -1,8 +1,17 @@
+.background {
+    position: absolute;
+    height: 1800px;
+    width: 100%;
+    top: 60px;
+    left: 0;
+    background-color: #D9D9D9;
+}
+
 .panel1 {
     position: absolute;
     height: 600px;
     top: 60px;
-    background-color: #D9D9D9;
+    background-color: #D9D9D9;  
 }
 
 .panel1_txt {
