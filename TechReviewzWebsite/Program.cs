@@ -11,6 +11,7 @@ using System.Net.Http.Headers;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllers();
 builder.Services.AddDbContextFactory<TechReviewzWebsiteContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("TechReviewzWebsiteContext") ?? throw new InvalidOperationException("Connection string 'TechReviewzWebsiteContext' not found.")));
 
@@ -52,52 +53,8 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure supported cultures based on your Locales folder
-string[] supportedCultures = [
-    "en-US", // English (United States)
-    "en-GB", // English (United Kingdom)
-    "ar",    // Arabic
-    "ar-AE", // Arabic (United Arab Emirates)
-    "ca",    // Catalan
-    "cs",    // Czech
-    "da",    // Danish
-    "de",    // German
-    "el-GR", // Greek (Greece)
-    "es",    // Spanish
-    "fa",    // Persian
-    "fi",    // Finnish
-    "fr",    // French
-    "fr-CH", // French (Switzerland)
-    "he",    // Hebrew
-    "hi-IN", // Hindi (India)
-    "hr",    // Croatian
-    "hu",    // Hungarian
-    "id",    // Indonesian
-    "it",    // Italian
-    "ja",    // Japanese
-    "ko",    // Korean
-    "ms",    // Malay
-    "nb",    // Norwegian Bokmål
-    "nl",    // Dutch
-    "pl",    // Polish
-    "pt",    // Portuguese
-    "pt-BR", // Portuguese (Brazil)
-    "ro",    // Romanian
-    "ru",    // Russian
-    "sk",    // Slovak
-    "sv",    // Swedish
-    "th",    // Thai
-    "tr",    // Turkish
-    "vi",    // Vietnamese
-    "zh"     // Chinese
-];
-
-var localizationOptions = new RequestLocalizationOptions()
-    .SetDefaultCulture(supportedCultures[0])
-    .AddSupportedCultures(supportedCultures)
-    .AddSupportedUICultures(supportedCultures);
-
-app.UseRequestLocalization(localizationOptions);
+//Add the Default controller route 
+app.MapDefaultControllerRoute();
 
 if (!app.Environment.IsDevelopment())
 {

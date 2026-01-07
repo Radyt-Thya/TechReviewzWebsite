@@ -254,7 +254,7 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = "3781efa7-66dc-47f0-860f-e506d04102e4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "49b14f5c-7e2c-4d7b-86dc-79c54c03e94a",
+                            ConcurrencyStamp = "50e8c2e2-73cb-4d13-91e4-23c5988ed93e",
                             Email = "admin@localhost.com",
                             EmailConfirmed = true,
                             FirstName = "Admin",
@@ -262,9 +262,9 @@ namespace TechReviewzWebsite.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@LOCALHOST.COM",
                             NormalizedUserName = "ADMIN@LOCALHOST.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBDeN7B8bsjs7CF/UyQzbEdeWSEpE4W8WbFFg2i6uvAHdpyZz0zV9gqUddaDJ8a0Fw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIzaBXueDscFpU/fBodDxZmQo7+X6LihZe7uZJtL3+xShAJZOzafKmPAFI1IpZ2zzA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "69f92a7e-b54d-4038-aaf2-fcfb216aaf54",
+                            SecurityStamp = "9dcda766-9f57-416d-9831-27d0a340cd2f",
                             TwoFactorEnabled = false,
                             UserName = "admin@localhost.com"
                         });
@@ -402,7 +402,7 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = 1,
                             Brand = "Apple",
-                            DateReleased = new DateTime(2026, 1, 18, 21, 21, 3, 63, DateTimeKind.Local).AddTicks(2259),
+                            DateReleased = new DateTime(2026, 1, 14, 15, 1, 38, 130, DateTimeKind.Local).AddTicks(3834),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Latest Apple smartphone with A15 Bionic chip",
                             Name = "iPhone 13",
@@ -412,7 +412,7 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = 2,
                             Brand = "Samsung",
-                            DateReleased = new DateTime(2026, 1, 18, 21, 21, 3, 63, DateTimeKind.Local).AddTicks(2261),
+                            DateReleased = new DateTime(2026, 1, 14, 15, 1, 38, 130, DateTimeKind.Local).AddTicks(3842),
                             DateUpdated = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Flagship Samsung phone with excellent camera",
                             Name = "Samsung Galaxy S21",
@@ -464,8 +464,8 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = 1,
                             Content = "Amazing phone with great features!",
-                            DateCreated = new DateTime(2026, 1, 18, 21, 21, 3, 63, DateTimeKind.Local).AddTicks(1998),
-                            DateUpdated = new DateTime(2026, 1, 18, 21, 21, 3, 63, DateTimeKind.Local).AddTicks(2009),
+                            DateCreated = new DateTime(2026, 1, 14, 15, 1, 38, 130, DateTimeKind.Local).AddTicks(3331),
+                            DateUpdated = new DateTime(2026, 1, 14, 15, 1, 38, 130, DateTimeKind.Local).AddTicks(3350),
                             ProductId = 1,
                             Rating = 5,
                             Title = "samsung review"
@@ -474,8 +474,8 @@ namespace TechReviewzWebsite.Migrations
                         {
                             Id = 2,
                             Content = "battery life could be better.",
-                            DateCreated = new DateTime(2026, 1, 18, 21, 21, 3, 63, DateTimeKind.Local).AddTicks(2012),
-                            DateUpdated = new DateTime(2026, 1, 18, 21, 21, 3, 63, DateTimeKind.Local).AddTicks(2013),
+                            DateCreated = new DateTime(2026, 1, 14, 15, 1, 38, 130, DateTimeKind.Local).AddTicks(3357),
+                            DateUpdated = new DateTime(2026, 1, 14, 15, 1, 38, 130, DateTimeKind.Local).AddTicks(3358),
                             ProductId = 0,
                             Rating = 4,
                             Title = "Iphone review"
