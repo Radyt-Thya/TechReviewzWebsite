@@ -15,6 +15,10 @@
 }
 
 .panel1_txt {
+    position: absolute;
+    font-weight: bold;
+    font-size: 30px;
+    text-align: center;
     top: 250px;
     left: 50%;
     z-index: 2;
@@ -34,19 +38,20 @@
 
 .panel2 {
     position: absolute;
+    text-align: center;
     height: 350px;
     top: 660px;
     background-color: white;
 }
 
 .panel2_txt {
-    top: 50px;
-    left: 800px;
+    padding: 40px;
     z-index: 2;
 }
 
 .panel3 {
     position: absolute;
+    text-align: center;
     height: 700px;
     top: 1010px;
     background-color: #912729;
@@ -54,8 +59,8 @@
 
 .panel3_txt {
     color: white;
-    top: 70px;
-    left: 725px;
+    padding: 75px;
+    gap: 100px;
     z-index: 2;
 }
 
@@ -140,7 +145,29 @@
 }
 
 .spacing2 {
-    padding: 50px;
+    padding: 75px;
+}
+
+a {
+    color:black;
+}
+
+.list {
+    text-align: center;
+    justify-content: center;
+    display: flex;
+    list-style-type: none;
+    font-size: 20px;
+    gap: 75px;
+    padding: 10px;
+}
+
+.profile_image {
+    width: 350px;
+    height: 350px;
+    aspect-ratio: 10/9;
+    object-fit: cover;
+    box-shadow: 0 15px 27px rgba(0,0,0,.15);
 }
 
 /* Grouped */
@@ -148,15 +175,4 @@
     position: absolute;
     width: 100%;
     left: 0px;
-}
-
-.panel1_txt, .panel2_txt, .panel3_txt {
-    position: absolute;
-    font-weight: bold;
-    font-size: 30px;
-    text-align: center;
-}
-
-a {
-    color:black;
 }

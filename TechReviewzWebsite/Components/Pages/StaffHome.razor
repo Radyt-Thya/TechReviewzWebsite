@@ -12,6 +12,8 @@
 {
     <p>Loading stats...</p>
 }
+
+
 else
 {
     <div class="dash-grid">
@@ -36,7 +38,36 @@ else
         </div>
     </div>
 }
+        <section>
+            <div class="charts-grid">
+                <div class="card chart-card">
+                    <div class="card-title">Target</div>
+                    <div class="placeholder"></div>
+                </div>
 
+                <div class="card chart-card">
+                    <div class="card-title">Most Active Account Types</div>
+                    <div class="placeholder"></div>
+                </div>
+
+                <div class="card chart-card wide">
+                    <div class="card-title">Pending reviews</div>
+                    <div class="placeholder"></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="panel">
+            <h2 class="panel-title">Add Products</h2>
+            <a href="/reviews">Add product</a>
+        </div>
+
+        <section class="panel">
+            <h2 class="panel-title">Feedback</h2>
+            <div class="card feedback-card">
+                <div class="placeholder tall"></div>
+            </div>
+        </section>
 
 
                 <div class="card stat-card">
@@ -62,10 +93,8 @@ else
         {
             await using var db = await _dbFactory.CreateDbContextAsync();
 
-            // Identity users count (often easiest via UserManager)
-            var totalUsers = _userManager.Users.Count(); // IQueryable -> DB count
+            var totalUsers = _userManager.Users.Count(); 
 
-            // Replace these with YOUR entity names (Products, Reviews, etc.)
             var totalProducts = await db.Product.CountAsync();
             var totalReviews  = await db.Review.CountAsync();
 
@@ -76,9 +105,7 @@ else
                 .AverageAsync(r => (double?)r.Rating) ?? 0;
 
             var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
-            var newUsers7d = _userManager.Users.Count(u => u.LockoutEnd == null /* ignore */); 
-            // If you have a CreatedAt column for users, use that instead:
-            // var newUsers7d = await db.Users.CountAsync(u => u.CreatedAt >= sevenDaysAgo);
+            var newUsers7d = _userManager.Users.Count(u => u.LockoutEnd == null ); 
 
             return new Domain.StaffDashboardStats
             {
@@ -86,7 +113,7 @@ else
                 TotalProducts = totalProducts,
                 TotalReviews = totalReviews,
                 TotalComments = await db.Comments.CountAsync(),
-                // Add other stats here
+         
             };
         }
     }

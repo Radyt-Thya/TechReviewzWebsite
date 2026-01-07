@@ -122,19 +122,18 @@
     protected override async Task OnInitializedAsync()
     {
         user = await UserAccessor.GetRequiredUserAsync(HttpContext);
-        firstname = user.FirstName; // FIX: Directly access the Gender property
-        lastname = user.LastName; // FIX: Directly access the Gender property
+        firstname = user.FirstName; // Directly access the Gender property
+        lastname = user.LastName; // FDirectly access the Gender property
         username = await UserManager.GetUserNameAsync(user);
-        gender = user.Gender; // FIX: Directly access the Gender property
+        gender = user.Gender; // Directly access the Gender property
         phoneNumber = await UserManager.GetPhoneNumberAsync(user);
         email = await UserManager.GetEmailAsync(user);
         isEmailConfirmed = await UserManager.IsEmailConfirmedAsync(user);
 
-        Input.FirstName ??= firstname; // Optionally prefill Gender in the form
-        Input.LastName ??= lastname; // Optionally prefill Gender in the form
-        Input.Gender ??= gender; // Optionally prefill Gender in the form
-        Input.PhoneNumber ??= phoneNumber;
-        Input.Gender ??= gender; // Optionally prefill Gender in the form
+        Input.FirstName ??= firstname; 
+        Input.LastName ??= lastname; 
+        Input.Gender ??= gender; 
+        Input.PhoneNumber ??= phoneNumber;        
         Input.NewEmail ??= email;
     }
 
