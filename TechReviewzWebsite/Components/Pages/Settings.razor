@@ -5,11 +5,11 @@
 
 <div class="background">
     <div class="heading">
-        <h1><b>@localizer["App_Settings"]</b></h1>
+        <h1><b>Settings</b></h1>
     </div>
 
     <div class="panel1">
-        <h2><b>@localizer["App_Language"]</b></h2>
+        <h2><b>Language</b></h2>
 
         <select @bind="SelectedLang" class="form-select mb-3">
             <option value="en-US">English (United States)</option>
@@ -50,11 +50,11 @@
             <option value="zh">中文 (Chinese)</option>
         </select>
 
-        <button class="btn btn-primary" @onclick="ApplyLanguage">@localizer["App_ApplyLanguage"]</button>
+        <button class="btn btn-primary" @onclick="ApplyLanguage">Apply Language</button>
         
         <div class="mt-3">
-            <p>@localizer["App_CurrentLanguage"]: <strong>@GetCurrentLanguageName()</strong></p>
-            <p class="text-muted small">@localizer["App_LanguageNote"]</p>
+            <p>Current Language: <strong>@GetCurrentLanguageName()</strong></p>
+            <p class="text-muted small">Note: Some content may be translated automatically using external services.</p>
         </div>
     </div>
 </div>

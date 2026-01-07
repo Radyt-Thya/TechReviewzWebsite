@@ -13,7 +13,7 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager     
 
-<PageTitle>@localizer["App_Login"]</PageTitle>
+<PageTitle>Login</PageTitle>
 
 <div class="login_panel">
     <section>
@@ -25,39 +25,39 @@
             <ValidationSummary class="text-danger" role="alert" />
             <div class="form-floating mb-3">
                 <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                <label for="email" class="form-label">@localizer["App_Email"]</label>
+                <label for="email" class="form-label">Email</label>
                 <ValidationMessage For="() => Input.Email" class="text-danger" />
             </div>
             <div class="form-floating mb-3">
                 <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                <label for="password" class="form-label">@localizer["App_Password"]</label>
+                <label for="password" class="form-label">Password</label>
                 <ValidationMessage For="() => Input.Password" class="text-danger" />
             </div>
             <div class="checkbox mb-3">
                 <label class="form-label">
                     <InputCheckbox @bind-Value="Input.RememberMe" class="darker-border-checkbox form-check-input" />
-                    @localizer["App_RememberMe"]
+                    Remember me
                 </label>
             </div>
             <div>
-                <button type="submit" class="w-100 btn btn-lg btn-primary">@localizer["App_Login"]</button>
+                <button type="submit" class="w-100 btn btn-lg btn-primary">Login</button>
             </div>
             <div>
                 <p>
-                    <a href="Account/ForgotPassword">@localizer["App_ForgotPassword"]</a>
+                    <a href="Account/ForgotPassword">Forgot your password?</a>
                 </p>
                 <p>
-                    <a href="Account/ResendEmailConfirmation">@localizer["App_ResendEmailConfirmation"]</a>
+                    <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>
                 </p>
             </div>
         </EditForm>
     </section> 
     <hr>
-    <p>@localizer["App_NoAccount"] <a href="Registration">@localizer["App_SignUpHere"]</a></p>
+    <p>Don't have an account? <a href="Registration">Sign up here</a></p>
 </div>
 <div>
     <label>
-        <img src="Images/phone_image.jpg" class="login_image" alt="@localizer["App_Login"]" />
+        <img src="Images/phone_image.jpg" class="login_image" alt="Login" />
     </label>
 </div>
 
@@ -102,7 +102,7 @@
         }
         else
         {
-            errorMessage = localizer["App_InvalidLogin"];
+            errorMessage = "Error: Invalid login attempt.";
         }
     }
 

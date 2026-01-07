@@ -2,13 +2,10 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Localization;
 using TechReviewzWebsite.Components;
 using TechReviewzWebsite.Components.Account;
 using TechReviewzWebsite.Data;
 using TechReviewzWebsite.Domain;
-using TechReviewzWebsite.Services;
-using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContextFactory<TechReviewzWebsiteContext>(options =>
@@ -49,8 +46,6 @@ builder.Services.AddAntiforgery(options =>
 });
 
 builder.Services.AddAuthorization();
-builder.Services.AddHttpClient<TranslationService>();
-builder.Services.AddSingleton<TranslationStateService>();
 
 var app = builder.Build();
 
