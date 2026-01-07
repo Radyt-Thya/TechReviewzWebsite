@@ -1,15 +1,12 @@
 ﻿@page "/Registration"
 @rendermode InteractiveServer
-@inject NavigationManager Navigation
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
-@using Microsoft.AspNetCore.Identity.EntityFrameworkCore
 @using Microsoft.AspNetCore.WebUtilities
 @using TechReviewzWebsite.Components.Account
-@using TechReviewzWebsite.Components.Account.Pages
 @using TechReviewzWebsite.Data
 @using TechReviewzWebsite.Components.Account.Shared
 
@@ -17,7 +14,7 @@
 @inject IUserStore<TechReviewzWebsiteUser> UserStore
 @inject SignInManager<TechReviewzWebsiteUser> SignInManager
 @inject IEmailSender<TechReviewzWebsiteUser> EmailSender
-@inject ILogger<Register> Logger
+@inject ILogger<Registration> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 @inject RoleManager<IdentityRole> RoleManager
@@ -33,7 +30,6 @@
                 <h1><b>Create an Account</b></h1>
             </div>
             <div class="panel1">
-            @* <ValidationSummary class="text-danger" role="alert" /> *@
             <div class="details">
                 <h3><b>Account Details</b></h3>
                 <div class="profile">
@@ -44,20 +40,20 @@
             </div>
             <div style="display: flex; margin-bottom: 20px; gap: 20px;">
                 <div class="details_name">
-                    <label for="email">First Name</label>
-                    <InputText @bind-Value="Input.FirstName" class="form-control" autocomplete="firstname" aria-required="true" placeholder="John" />
+                    <label for="firstname">First Name</label>
+                    <InputText @bind-Value="Input.FirstName" class="form-control" autocomplete="firstname" aria-required="true" placeholder="John" id="firstname" />
                     <ValidationMessage For="() => Input.FirstName" class="text-danger" />
                 </div>
                 <div class="details_name">
-                    <label for="email">Last Name</label>
-                    <InputText @bind-Value="Input.LastName" class="form-control" autocomplete="lastname" aria-required="true" placeholder="Doe" />
+                    <label for="lastname">Last Name</label>
+                    <InputText @bind-Value="Input.LastName" class="form-control" autocomplete="lastname" aria-required="true" placeholder="Doe" id="lastname" />
                     <ValidationMessage For="() => Input.LastName" class="text-danger" />
                 </div>
             </div>
             <div style="display: flex; margin-bottom: 20px; gap: 20px;">
                 <div class="details_name">
-                    <label for="email">Gender</label>
-                    <InputSelect @bind-Value="Input.Gender" class="form-select" style="min-width:360px; width:100%;">
+                    <label for="gender">Gender</label>
+                    <InputSelect @bind-Value="Input.Gender" class="form-select" style="min-width:360px; width:100%;" id="gender">
                         <option value="">-- Select Gender --</option>
                         @foreach (var g in Gender)
                         {
@@ -67,24 +63,24 @@
                     <ValidationMessage For="() => Input.Gender" class="text-danger" />
                 </div>
                 <div class="details_name">
-                    <label for="email">Email</label>
-                    <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                    <label for="register-email">Email</label>
+                    <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" id="register-email" />
                     <ValidationMessage For="() => Input.Email" class="text-danger" />
                 </div>
             </div>
             <div style="margin-bottom: 20px; gap: 20px;">
-                <label for="password">Password</label>
-                <InputText type="Input Password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label for="register-password">Password</label>
+                <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" id="register-password" />
                 <ValidationMessage For="() => Input.Password" class="text-danger" />
             </div>
             <div style="margin-bottom: 20px; gap: 20px;">
                 <label for="confirm-password">Confirm Password</label>
-                <InputText type="Retype Password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" id="confirm-password" />
                 <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
             </div>
             <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
             <hr>
-            <p>Have an account? <a href="Login">Log in</a></p>
+            <p>Have an account? <a href="/Login">Log in</a></p>
             </div>
             </EditForm>
 </div>
@@ -127,14 +123,12 @@
             return;
         }
 
-        //create the user role if it doesn't exist 
         if (!await RoleManager.RoleExistsAsync("User")) 
         {     
             await RoleManager.CreateAsync(new IdentityRole("User")); 
         } 
-        //add the user to the user role 
+
         await UserManager.AddToRoleAsync(user, "User"); 
-        //add the user id as claim when user registers 
         await UserManager.AddClaimAsync(user, new System.Security.Claims.Claim("userId", user.Id));
 
         Logger.LogInformation("User created a new account with password.");

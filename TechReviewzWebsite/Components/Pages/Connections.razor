@@ -1,17 +1,18 @@
 ﻿@page "/connections"
 @page "/connections/{ViewUserId?}"
+@rendermode InteractiveServer
+
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using Microsoft.EntityFrameworkCore
-@using System.Linq
 @using System.Security.Claims
 @using TechReviewzWebsite.Data
 @using TechReviewzWebsite.Domain
+
 @inject IDbContextFactory<TechReviewzWebsiteContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @implements IDisposable
-@rendermode InteractiveServer
 
 <PageTitle>@(ViewingOtherUser ? $"{viewedUserDisplay}'s Profile" : "Connections")</PageTitle>
 

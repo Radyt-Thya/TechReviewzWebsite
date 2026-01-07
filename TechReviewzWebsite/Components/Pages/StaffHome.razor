@@ -1,5 +1,4 @@
 ﻿@page "/StaffHome"
-@using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @using TechReviewzWebsite.Data
 @using TechReviewzWebsite.Domain
@@ -44,81 +43,47 @@ else
                     <div class="card-title">Target</div>
                     <div class="placeholder"></div>
                 </div>
-
-                <div class="card chart-card">
-                    <div class="card-title">Most Active Account Types</div>
-                    <div class="placeholder"></div>
-                </div>
-
-                <div class="card chart-card wide">
-                    <div class="card-title">Pending reviews</div>
-                    <div class="placeholder"></div>
-                </div>
             </div>
         </section>
 
-        <div class="panel">
-            <h2 class="panel-title">Add Products</h2>
-            <a href="/reviews">Add product</a>
+<section>
+    <div class="charts-grid">
+        <div class="card chart-card">
+            <div class="card-title">Target</div>
+            <div class="placeholder"></div>
         </div>
 
-        <section class="panel">
-            <h2 class="panel-title">Feedback</h2>
-            <div class="card feedback-card">
-                <div class="placeholder tall"></div>
-            </div>
-        </section>
+        <div class="card chart-card">
+            <div class="card-title">Most Active Account Types</div>
+            <div class="placeholder"></div>
+        </div>
 
+        <div class="card chart-card wide">
+            <div class="card-title">Pending reviews</div>
+            <div class="placeholder"></div>
+        </div>
+    </div>
+</section>
 
-                <div class="card stat-card">
-                    <div class="muted">New Users</div>
-                    <div class="stat-number">3</div>
-                </div>
+<div class="panel">
+    <h2 class="panel-title">Add Products</h2>
+    <a href="/reviews">Add product</a>
+</div>
+
+<section class="panel">
+    <h2 class="panel-title">Feedback</h2>
+    <div class="card feedback-card">
+        <div class="placeholder tall"></div>
+    </div>
+</section>
+
+<div class="card stat-card">
+    <div class="muted">New Users</div>
+    <div class="stat-number">3</div>
+</div>
 
 @code {
-    public class StaffDashboardService
-    {
-        private readonly IDbContextFactory<TechReviewzWebsiteContext> _dbFactory;
-        private readonly UserManager<IdentityUser> _userManager;
-
-        public StaffDashboardService(
-            IDbContextFactory<TechReviewzWebsiteContext> dbFactory,
-            UserManager<IdentityUser> userManager)
-        {
-            _dbFactory = dbFactory;
-            _userManager = userManager;
-        }
-
-        public async Task<Domain.StaffDashboardStats> GetStatsAsync()
-        {
-            await using var db = await _dbFactory.CreateDbContextAsync();
-
-            var totalUsers = _userManager.Users.Count(); 
-
-            var totalProducts = await db.Product.CountAsync();
-            var totalReviews  = await db.Review.CountAsync();
-
-      
-
-            var avgRating = await db.Review
-                .Where(r => r.Rating != null)
-                .AverageAsync(r => (double?)r.Rating) ?? 0;
-
-            var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
-            var newUsers7d = _userManager.Users.Count(u => u.LockoutEnd == null ); 
-
-            return new Domain.StaffDashboardStats
-            {
-                TotalUsers = totalUsers,
-                TotalProducts = totalProducts,
-                TotalReviews = totalReviews,
-                TotalComments = await db.Comments.CountAsync(),
-         
-            };
-        }
-    }
-
-    private StaffDashboardStats dashboardStats;
+    private StaffDashboardStats? dashboardStats;
 
     protected override async Task OnInitializedAsync()
     {

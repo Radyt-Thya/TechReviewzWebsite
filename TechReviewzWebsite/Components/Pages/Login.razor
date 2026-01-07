@@ -2,7 +2,6 @@
 @rendermode InteractiveServer
 
 @using System.ComponentModel.DataAnnotations
-@using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
 @using TechReviewzWebsite.Components.Account
 @using TechReviewzWebsite.Components.Account.Shared
@@ -24,12 +23,12 @@
             <hr />
             <ValidationSummary class="text-danger" role="alert" />
             <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" id="email" />
                 <label for="email" class="form-label">Email</label>
                 <ValidationMessage For="() => Input.Email" class="text-danger" />
             </div>
             <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" id="password" />
                 <label for="password" class="form-label">Password</label>
                 <ValidationMessage For="() => Input.Password" class="text-danger" />
             </div>
@@ -44,20 +43,20 @@
             </div>
             <div>
                 <p>
-                    <a href="Account/ForgotPassword">Forgot your password?</a>
+                    <a href="/Account/ForgotPassword">Forgot your password?</a>
                 </p>
                 <p>
-                    <a href="Account/ResendEmailConfirmation">Resend email confirmation</a>
+                    <a href="/Account/ResendEmailConfirmation">Resend email confirmation</a>
                 </p>
             </div>
         </EditForm>
     </section> 
     <hr>
-    <p>Don't have an account? <a href="Registration">Sign up here</a></p>
+    <p>Don't have an account? <a href="/Registration">Sign up here</a></p>
 </div>
 <div>
     <label>
-        <img src="Images/phone_image.jpg" class="login_image" alt="Login" />
+        <img src="/Images/phone_image.jpg" class="login_image" alt="Login" />
     </label>
 </div>
 
@@ -72,14 +71,6 @@
 
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (HttpMethods.IsGet(HttpContext.Request.Method))
-        {
-            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-        }
-    }
 
     public async Task LoginUser()
     {
