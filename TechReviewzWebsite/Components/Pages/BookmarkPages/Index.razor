@@ -21,8 +21,14 @@ else
         @foreach (var b in Bookmarks)
         {
             <li>
-                <strong>@b.Title</strong> (Rating: @b.Rating)
+                <NavLink href="@($"/reviews/details?id={b.ReviewId}")">
+                    <strong>@b.Title</strong>
+                </NavLink>
+                <span> (Rating: @b.Rating)</span>
             </li>
+
+
+
         }
     </ul>
 }
