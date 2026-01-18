@@ -27,7 +27,7 @@
     <TemplateColumn Context="comments">
         <a href="@($"comments/edit?id={comments.Id}")">Edit</a> |
         <a href="@($"comments/details?id={comments.Id}")">Details</a>
-        <AuthorizeView Roles="Administrator"> 
+        <AuthorizeView Roles="Administrator">
             | <a href="@($"comments/delete?id={comments.Id}")">Delete</a>
         </AuthorizeView>
     </TemplateColumn>

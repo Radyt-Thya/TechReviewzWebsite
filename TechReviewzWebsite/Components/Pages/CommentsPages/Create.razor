@@ -1,11 +1,12 @@
 ﻿@page "/reviews/{ReviewId:int}/comments/create"
+@rendermode InteractiveServer
+
 @using Microsoft.EntityFrameworkCore
-@using TechReviewzWebsite.Components.Account
+@using System.Security.Claims
 @using TechReviewzWebsite.Domain
-@using TechReviewzWebsite.Data
 @inject IDbContextFactory<TechReviewzWebsite.Data.TechReviewzWebsiteContext> DbFactory
 @inject NavigationManager NavigationManager
-@inject IdentityUserAccessor UserAccessor
+@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>Add Comment</PageTitle>
 
@@ -14,21 +15,17 @@
 
 <div class="row">
     <div class="col-md-6">
-        <EditForm Model="Comments" 
-            OnValidSubmit="AddComments"
-            FormName = "CreateComments" 
-            Enhance>
+        <EditForm Model="Model" OnValidSubmit="AddComments">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
 
             <div class="mb-3">
                 <label class="form-label">Content</label>
-                <InputText @bind-Value="Comments.Content" class="form-control" />
-                <ValidationMessage For="() => Comments.Content" class="text-danger" />
+                <InputText @bind-Value="Model.Content" class="form-control" />
+                <ValidationMessage For="() => Model.Content" class="text-danger" />
             </div>
 
             <button class="btn btn-primary" type="submit">Post</button>
-           
         </EditForm>
     </div>
 </div>
@@ -36,37 +33,51 @@
 <a class="btn btn-link" href="@($"/reviews/details?id={ReviewId}")">Cancel</a>
 
 @code {
-    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
     [Parameter] public int ReviewId { get; set; }
 
-    private Comments Comments { get; set; } = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        await using var context = DbFactory.CreateDbContext();
-
-        Comments.ReviewId = ReviewId;
-
-        var identityUser = await UserAccessor.GetRequiredUserAsync(HttpContext);
-        Comments.UserId = identityUser.Id;
-
-        Comments.DateCreated = DateTime.Now;
-        Comments.DateUpdated = DateTime.Now;
-    }
+    private Comments Model { get; set; } = new();
 
     private async Task AddComments()
     {
-        await using var context = DbFactory.CreateDbContext();
-        Comments.ReviewId = ReviewId;
-        Comments.DateUpdated = DateTime.Now;
+        // 1) Auth
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
 
-        if (string.IsNullOrWhiteSpace(Comments.Content))
+        if (user.Identity?.IsAuthenticated != true)
         {
+            NavigationManager.NavigateTo("/login");
             return;
         }
 
-        context.Comments.Add(Comments);
-        await context.SaveChangesAsync();
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        // 2) Validate
+        if (string.IsNullOrWhiteSpace(Model.Content))
+            return;
+
+        // 3) Save a fresh entity (avoid tracking weirdness)
+        var entity = new Comments
+        {
+            ReviewId = ReviewId,
+            UserId = userId,
+            Content = Model.Content.Trim(),
+            DateCreated = DateTime.Now,
+            DateUpdated = DateTime.Now
+        };
+
+        await using var context = await DbFactory.CreateDbContextAsync();
+        context.Comments.Add(entity);
+
+        var rows = await context.SaveChangesAsync();
+
+        // If nothing saved, something is wrong (constraint/exception would usually throw)
+        if (rows <= 0)
+            return;
 
         NavigationManager.NavigateTo($"/reviews/details?id={ReviewId}");
     }
