@@ -11,6 +11,7 @@
     <div class="heading">
         <h1><b>Product Details</b></h1>
     </div>
+
     <div class="panel1">
         <h2>Product</h2>
         <hr />
@@ -38,14 +39,20 @@
                 <dt class="col-sm-2">Date Released</dt>
                 <dd class="col-sm-10">@product.DateUpdated</dd>
             </dl>
+                    @if (!string.IsNullOrWhiteSpace(product.ProductLink))
+                    {
+                        <a href="@product.ProductLink" target="_blank" rel="noopener noreferrer">
+                            Buy here
+                        </a>
+                    }
+                }
+
             <div>
                 <button class="btn btn-primary" @onclick=NavigateToProductEdit>Edit</button>
                 <button class="btn btn-secondary" @onclick=NavigateToProduct>Back to List</button>
             </div>
-        }
-    </div>
+            </div>
 </div>
-
 
 @code {
     private Product? product;

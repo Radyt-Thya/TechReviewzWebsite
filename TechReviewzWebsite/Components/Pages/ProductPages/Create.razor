@@ -95,6 +95,13 @@
                         <ValidationMessage For="() => Product.DateReleased" class="text-danger" />
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label">Purchase link</label>
+                        <InputText @bind-Value="Product.ProductLink" class="form-control" />
+                        <ValidationMessage For="() => Product.ProductLink" class="text-danger" />
+                    </div>
+
+
                     <div class="mb-3" hidden>
                         <label for="dateppdated" class="form-label">Date Updated:</label>
                         <InputDate id="dateppdated" @bind-Value="Product.DateUpdated" class="form-control" />
@@ -111,7 +118,14 @@
         </div>
     </div>
 </div>
-<h1><b>Create</b></h1>
+<h1><b>Create</b></h1
+
+@if (!string.IsNullOrWhiteSpace(Product.ProductLink))
+{
+    <a href="@Product.ProductLink" target="_blank" rel="noopener noreferrer">
+        Buy here
+    </a>
+}
 
 @code {
     [SupplyParameterFromForm]
@@ -154,6 +168,8 @@
         }
     }
 
+
+
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddProduct()
     {
@@ -169,6 +185,9 @@
         context.Product.Add(Product);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/products");
+
+       
+
     }
 }
 
